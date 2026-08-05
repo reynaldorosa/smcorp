@@ -1,0 +1,50 @@
+[
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\crm\\page.tsx",
+    "line": 216,
+    "kind": "empty_catch",
+    "snippet": "// Sem API/sem sessão: manter o store atual (persistido/local)"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\crm\\page.tsx",
+    "line": 234,
+    "kind": "empty_catch",
+    "snippet": "// API não disponível"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\crm\\page.tsx",
+    "line": 259,
+    "kind": "empty_catch",
+    "snippet": "// API não disponível — fallback local"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\documents\\page.tsx",
+    "line": 59,
+    "kind": "empty_catch",
+    "snippet": "// API indisponível — manter store/persist"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\documents\\page.tsx",
+    "line": 72,
+    "kind": "empty_catch",
+    "snippet": "// API indisponível"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\documents\\page.tsx",
+    "line": 85,
+    "kind": "empty_catch",
+    "snippet": "// API indisponível"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\documents\\page.tsx",
+    "line": 110,
+    "kind": "empty_catch",
+    "snippet": "// API indisponível"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\documents\\student-documents-detail.tsx",
+    "line": 217,
+    "kind": "empty_catch",
+    "snippet": "// ignore"
+  }
+]

@@ -1,0 +1,1278 @@
+// ============================================
+// SMCORP - Prisma Schema
+// ============================================
+// Fase 1: Estrutura básica de autenticação
+// ============================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USUÁRIOS DO SISTEMA
+// ============================================
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  password     String
+  masterPinHash String?  @map("master_pin_hash")
+  name         String
+  role         UserRole  @default(CLIENT_PF)
+  isActive     Boolean   @default(true) @map("is_active")
+  // Permissões granulares por módulo (modulo00..modulo09) — null = usa os
+  // defaults do role (ver backend/src/modules/auth/permissions.ts). Antes só
+  // existia no localStorage do frontend; o backend agora tem a mesma fonte
+  // de verdade que o PermissionsGuard aplica em cada rota.
+  permissions  Json?
+  refreshToken String?   @map("refresh_token")
+  lastLoginAt  DateTime? @map("last_login_at")
+  // Nullable: usuários MASTER (plataforma) não pertencem a tenant
+  tenantId     String?   @map("tenant_id")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  tenant              Tenant?           @relation(fields: [tenantId], references: [id])
+  discountApprovals   Enrollment[]      @relation("DiscountApprovals")
+  documentValidations StudentDocument[] @relation("DocumentValidations")
+  auditLogs           AuditLog[]        @relation("UserAuditLogs")
+  certificatesIssued  Certificate[]     @relation("CertificateIssuer")
+  crmAssignedContacts CRMContact[]      @relation("CRMAssignedContacts")
+  crmActivitiesCreated CRMActivity[]    @relation("CRMActivityCreator")
+  attendanceConfirmations InstructorAttendance[] @relation("AttendanceConfirmations")
+
+  @@index([email])
+  @@index([role])
+  @@index([tenantId])
+  @@index([deletedAt])
+  @@map("users")
+}
+
+enum UserRole {
+  MASTER // Usuário Master (plataforma SaaS / aprovação de descontos)
+  ADMIN // Administrador do tenant
+  COLLABORATOR // Colaboradores internos do tenant
+  CLIENT_PF // Cliente Pessoa Física
+  CLIENT_PJ // Cliente Pessoa Jurídica
+  CLIENT_MOV // Cliente Móvel
+}
+
+// ============================================
+// TENANTS (SAAS) — cada centro de treinamento é um tenant isolado
+// ============================================
+model Tenant {
+  id           String       @id @default(uuid())
+  slug         String       @unique // Identificador público: smcorp, escola-x...
+  name         String
+  cnpj         String?      @unique
+  status       TenantStatus @default(TRIAL)
+  // Branding do tenant: { logoUrl, primaryColor, institutionName... }
+  branding     Json?        @default("{}")
+  trialEndsAt  DateTime?    @map("trial_ends_at")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+  deletedAt    DateTime?    @map("deleted_at")
+
+  users                    User[]
+  subscription             Subscription?
+  companies                Company[]
+  companySettings          CompanySettings[]
+  students                 Student[]
+  courses                  Course[]
+  rooms                    Room[]
+  instructors              Instructor[]
+  suppliers                Supplier[]
+  classes                  Class[]
+  enrollments              Enrollment[]
+  payments                 Payment[]
+  extraProducts            ExtraProduct[]
+  costs                    Cost[]
+  costCriteria             CostCriterion[]
+  costEntries              CostEntry[]
+  courseCosts              CourseCost[]
+  studentDocuments         StudentDocument[]
+  exams                    Exam[]
+  certificates             Certificate[]
+  certificateTemplates     CertificateTemplate[]
+  crmContacts              CRMContact[]
+  crmActivities            CRMActivity[]
+  crmPipelineStages        CRMPipelineStage[]
+  crmDeals                 CRMDeal[]
+  auditLogs                AuditLog[]
+  notificationLogs         NotificationLog[]
+  enrollmentExtraProducts  EnrollmentExtraProduct[]
+  classInstructors         ClassInstructor[]
+  instructorAttendances    InstructorAttendance[]
+
+  @@index([status])
+  @@index([deletedAt])
+  @@map("tenants")
+}
+
+// ============================================
+// LOG DE NOTIFICAÇÕES (comunicação SaaS)
+// ============================================
+model NotificationLog {
+  id                String   @id @default(uuid())
+  tenantId          String?  @map("tenant_id")
+  channel           String // whatsapp | sms | email
+  recipient         String
+  subject           String?
+  message           String?
+  provider          String // uniqsuporte | smtp | none
+  providerMessageId String?  @map("provider_message_id")
+  status            String   @default("SENT") // SENT | PENDING | DELIVERED | FAILED
+  error             String?
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+  @@index([channel])
+  @@index([status])
+  @@map("notification_logs")
+}
+
+enum TenantStatus {
+  TRIAL // Período de avaliação (14 dias)
+  ACTIVE // Assinatura ativa
+  SUSPENDED // Inadimplência/cancelamento — acesso bloqueado
+  CANCELLED // Encerrado
+}
+
+// ============================================
+// ASSINATURAS (SaaS) — preço customizado por tenant
+// ============================================
+model Subscription {
+  id                      String             @id @default(uuid())
+  tenantId                String             @unique @map("tenant_id")
+  provider                String             @default("MERCADO_PAGO")
+  providerCustomerId      String?            @map("provider_customer_id")
+  providerSubscriptionId  String?            @map("provider_subscription_id")
+  planName                String?            @map("plan_name") // Rótulo comercial
+  price                   Decimal            @default(0) @db.Decimal(10, 2)
+  status                  SubscriptionStatus @default(TRIAL)
+  trialEndsAt             DateTime?          @map("trial_ends_at")
+  currentPeriodStart      DateTime?          @map("current_period_start")
+  currentPeriodEnd        DateTime?          @map("current_period_end")
+  cancelAtPeriodEnd       Boolean            @default(false) @map("cancel_at_period_end")
+  createdAt               DateTime           @default(now()) @map("created_at")
+  updatedAt               DateTime           @updatedAt @map("updated_at")
+  deletedAt               DateTime?          @map("deleted_at")
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([deletedAt])
+  @@map("subscriptions")
+}
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE // Cobrança falhou — janela de tolerância
+  CANCELLED
+  SUSPENDED
+}
+
+// ============================================
+// EMPRESAS PARCEIRAS
+// ============================================
+model Company {
+  id        String    @id @default(uuid())
+  name      String
+  tradeName String?   @map("trade_name")
+  // Antes @unique globalmente: impedia dois tenants de terem parceiras com o
+  // mesmo CNPJ (empresas de tenants DIFERENTES nunca têm relação entre si).
+  cnpj      String
+  email     String?
+  phone     String?
+  address   String?
+  city      String?
+  state     String?
+  zipCode   String?   @map("zip_code")
+  isActive  Boolean   @default(true) @map("is_active")
+  tenantId  String?    @map("tenant_id")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  tenant      Tenant?            @relation(fields: [tenantId], references: [id])
+  students    Student[]
+  payments    Payment[]
+  settings    CompanySettings?
+  classes     Class[]
+  crmContacts CRMContact[]
+  costEntries CostEntry[]
+
+  @@unique([tenantId, cnpj])
+  @@index([tenantId])
+  @@index([isActive])
+  @@index([deletedAt])
+  @@map("companies")
+}
+
+// ============================================
+// CONFIGURAÇÕES DA EMPRESA
+// ============================================
+model CompanySettings {
+  id        String    @id @default(uuid())
+  companyId String    @unique @map("company_id")
+  tenantId  String?    @map("tenant_id")
+  settings  Json // JSONB: { bank: {...}, smtp: {...}, whatsapp: {...} }
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  tenant  Tenant?  @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+  @@index([deletedAt])
+  @@map("company_settings")
+}
+
+// ============================================
+// ALUNOS
+// ============================================
+model Student {
+  id        String    @id @default(uuid())
+  // code/cpf antes @unique globalmente: bloqueava um aluno de fazer curso em
+  // DOIS centros de treinamento diferentes (tenants) para sempre — a mesma
+  // pessoa (CPF) só podia ser aluna em UM tenant de toda a plataforma.
+  code      String    // Código do aluno dentro do tenant (A0001, A0002, etc.)
+  name      String
+  cpf       String
+  rg        String?
+  email     String?
+  phone     String?
+  birthDate DateTime? @map("birth_date")
+  companyId String?   @map("company_id")
+  tenantId  String?    @map("tenant_id")
+  photoUrl  String?   @map("photo_url") // Foto do aluno (obrigatória no card)
+  address   String?
+  city      String?
+  state     String?
+  zipCode   String?   @map("zip_code")
+  isActive  Boolean   @default(true) @map("is_active")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  company      Company?          @relation(fields: [companyId], references: [id])
+  tenant       Tenant?            @relation(fields: [tenantId], references: [id])
+  enrollments  Enrollment[]
+  documents    StudentDocument[]
+  certificates Certificate[]
+  crmContacts  CRMContact[]
+  costEntries  CostEntry[]
+
+  @@unique([tenantId, code])
+  @@unique([tenantId, cpf])
+  @@index([companyId])
+  @@index([tenantId])
+  @@index([isActive])
+  @@index([deletedAt])
+  @@map("students")
+}
+
+// ============================================
+// CURSOS
+// ============================================
+model Course {
+  id                String    @id @default(uuid())
+  name              String
+  code              String // Único por tenant (ver @@unique) — antes era global
+  description       String?
+  syllabus          String?   @db.Text // Conteúdo Programático (M01)
+  durationHours     Int       @map("duration_hours") // Carga Horária Total
+  hoursPerDay       Int?      @default(8) @map("hours_per_day") // Horas de aula/dia (M01)
+  defaultStartTime  String?   @map("default_start_time") // Ex: "08:00" (M01)
+  defaultEndTime    String?   @map("default_end_time") // Ex: "18:00" (M01)
+  breakDuration     Int?      @default(60) @map("break_duration") // Minutos de intervalo (M01)
+  allowWeekends     Boolean   @default(false) @map("allow_weekends") // Seletor fim de semana (M01)
+  requiredDocuments Json?     @default("[]") @map("required_documents") // ["RG", "CPF", "ASO"] (M01)
+  
+  // DNA Técnico - Campos Adicionais (M01)
+  learningTime      Int?      @map("learning_time") // Tempo de aprendizagem em horas
+  certificationInfo String?   @map("certification_info") @db.Text // Informações de certificação
+  prerequisites     String[]  @default([]) // Pré-requisitos (array de strings)
+  
+  price             Decimal   @db.Decimal(10, 2)
+  validityMonths    Int       @map("validity_months")
+  isOffshore        Boolean   @default(true) @map("is_offshore")
+  isActive          Boolean   @default(true) @map("is_active")
+  tenantId          String?    @map("tenant_id")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  deletedAt         DateTime? @map("deleted_at")
+
+  tenant       Tenant?        @relation(fields: [tenantId], references: [id])
+  classes      Class[]
+  costs        CourseCost[] // Vínculo com custos auditáveis (M01)
+  exams        Exam[]
+  certificates Certificate[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([isActive])
+  @@index([deletedAt])
+  @@map("courses")
+}
+
+// ============================================
+// SALAS
+// ============================================
+model Room {
+  id           String    @id @default(uuid())
+  name         String
+  code         String // Único por tenant (ver @@unique) — antes era global
+  block        String? // Bloco A, B, C, etc
+  capacity     Int
+  costPerDay   Decimal?  @map("cost_per_day") @db.Decimal(10, 2)
+  location     String?
+  address      String?
+  hasAC        Boolean   @default(true) @map("has_ac")
+  hasProjector Boolean   @default(true) @map("has_projector")
+  isActive     Boolean   @default(true) @map("is_active")
+  tenantId     String?    @map("tenant_id")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  tenant  Tenant?  @relation(fields: [tenantId], references: [id])
+  classes Class[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([isActive])
+  @@index([deletedAt])
+  @@map("rooms")
+}
+
+// ============================================
+// TURMAS
+// ============================================
+model Class {
+  id           String      @id @default(uuid())
+  code         String // Único por tenant (ver @@unique) — antes era global
+  courseId     String      @map("course_id")
+  roomId       String?     @map("room_id")
+  instructorId String?     @map("instructor_id") // FK para Instructor (M02)
+  companyId    String?     @map("company_id") // Turma fechada para empresa (M02)
+  displayName  String?     @map("display_name") // Nome personalizado para exibição
+  customPrice  Decimal?    @map("custom_price") @db.Decimal(10, 2) // Preço PJ (M02)
+  startDate    DateTime    @map("start_date")
+  endDate      DateTime    @map("end_date") // Calculado automaticamente (M02)
+  startTime    String      @map("start_time")
+  endTime      String      @map("end_time")
+  maxStudents  Int         @map("max_students")
+  status       ClassStatus @default(SCHEDULED)
+  tenantId     String?      @map("tenant_id")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+  deletedAt    DateTime?   @map("deleted_at")
+
+  course      Course       @relation(fields: [courseId], references: [id])
+  room        Room?        @relation(fields: [roomId], references: [id])
+  instructor  Instructor?  @relation(fields: [instructorId], references: [id])
+  company     Company?     @relation(fields: [companyId], references: [id])
+  tenant      Tenant?       @relation(fields: [tenantId], references: [id])
+  enrollments Enrollment[]
+  costEntries CostEntry[]
+  classInstructors ClassInstructor[]
+
+  @@unique([tenantId, code])
+  @@index([courseId])
+  @@index([roomId])
+  @@index([instructorId])
+  @@index([companyId])
+  @@index([tenantId])
+  @@index([startDate])
+  @@index([status])
+  @@index([deletedAt])
+  @@map("classes")
+}
+
+// ============================================
+// MÓDULO 03: INSTRUTORES DA TURMA (N:N) + PRESENÇA
+//
+// `class_instructors` já existia como tabela solta, manipulada por SQL cru.
+// Modelada aqui para entrar no type-safety do Prisma e no middleware
+// multi-tenant, junto com a presença por dia que antes não era persistida.
+// ============================================
+model ClassInstructor {
+  id           String    @id @default(uuid())
+  classId      String    @map("class_id")
+  instructorId String    @map("instructor_id")
+  tenantId     String?   @map("tenant_id")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  class       Class                  @relation(fields: [classId], references: [id], onDelete: Cascade)
+  instructor  Instructor             @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+  tenant      Tenant?                @relation(fields: [tenantId], references: [id])
+  attendances InstructorAttendance[]
+
+  @@index([classId])
+  @@index([instructorId])
+  @@index([tenantId])
+  @@index([deletedAt])
+  @@map("class_instructors")
+}
+
+model InstructorAttendance {
+  id                String    @id @default(uuid())
+  classInstructorId String    @map("class_instructor_id")
+  /// Dia da aula em que a presença foi confirmada
+  date              DateTime  @db.Date
+  confirmedAt       DateTime  @default(now()) @map("confirmed_at")
+  /// User.id de quem confirmou
+  confirmedBy       String    @map("confirmed_by")
+  tenantId          String?   @map("tenant_id")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  deletedAt         DateTime? @map("deleted_at")
+
+  classInstructor ClassInstructor @relation(fields: [classInstructorId], references: [id], onDelete: Cascade)
+  confirmedByUser User?           @relation("AttendanceConfirmations", fields: [confirmedBy], references: [id])
+  tenant          Tenant?         @relation(fields: [tenantId], references: [id])
+
+  @@unique([classInstructorId, date])
+  @@index([tenantId])
+  @@index([deletedAt])
+  @@map("instructor_attendances")
+}
+
+enum ClassStatus {
+  SCHEDULED // Agendada
+  IN_PROGRESS // Em andamento
+  COMPLETED // Concluída
+  CANCELLED // Cancelada
+}
+
+// ============================================
+// MATRÍCULAS
+// ============================================
+model Enrollment {
+  id        String           @id @default(uuid())
+  studentId String           @map("student_id")
+  classId   String           @map("class_id")
+  status    EnrollmentStatus @default(SCHEDULED)
+
+  // Token de matrícula (M03)
+  enrollmentToken String?   @unique @map("enrollment_token")
+  tokenExpiresAt  DateTime? @map("token_expires_at")
+  tokenUsedAt     DateTime? @map("token_used_at")
+
+  // Ajuste comercial (M03 - requer aprovação MASTER)
+  discount           Decimal?  @default(0) @db.Decimal(10, 2)
+  discountApprovedBy String?   @map("discount_approved_by") // FK User.MASTER
+  discountApprovedAt DateTime? @map("discount_approved_at")
+
+  // Status documentos (M03 - [DOC])
+  documentsStatus DocumentStatus @default(PENDING) @map("documents_status")
+
+  tenantId    String?    @map("tenant_id")
+  enrolledAt  DateTime  @default(now()) @map("enrolled_at")
+  confirmedAt DateTime? @map("confirmed_at")
+  attendedAt  DateTime? @map("attended_at")
+  notes       String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  student       Student                  @relation(fields: [studentId], references: [id])
+  class         Class                    @relation(fields: [classId], references: [id])
+  tenant        Tenant?                   @relation(fields: [tenantId], references: [id])
+  approvedBy    User?                    @relation("DiscountApprovals", fields: [discountApprovedBy], references: [id])
+  payment       Payment?
+  extraProducts EnrollmentExtraProduct[]
+  exams         Exam[]
+  certificate   Certificate?
+
+  @@unique([studentId, classId])
+  @@index([status])
+  @@index([studentId])
+  @@index([classId])
+  @@index([tenantId])
+  @@index([enrollmentToken])
+  @@index([documentsStatus])
+  @@index([deletedAt])
+  @@map("enrollments")
+}
+
+enum EnrollmentStatus {
+  WAITING_LIST // Fila de espera (aguardando vaga na turma)
+  SCHEDULED // Agendado
+  TO_CONFIRM // Confirmar
+  CONFIRMED // Confirmado
+  PRESENT // Presente
+  ABSENT // Ausente
+  CANCELLED // Cancelado
+}
+
+// ============================================
+// PAGAMENTOS / FLUXO DE CAIXA
+// ============================================
+model Payment {
+  id            String          @id @default(uuid())
+  enrollmentId  String?         @unique @map("enrollment_id")
+  companyId     String?         @map("company_id")
+  description   String
+  type          PaymentType
+  category      PaymentCategory
+  // Discriminador de domínio — antes o código diferenciava "fatura de
+  // assinatura SaaS" de "pagamento de matrícula" fazendo
+  // `description.contains('Assinatura')`, um texto livre sem garantia
+  // nenhuma. kind é o campo de verdade; description continua livre para
+  // exibição.
+  kind          PaymentKind     @default(ENROLLMENT)
+  amount        Decimal         @db.Decimal(10, 2)
+  dueDate       DateTime        @map("due_date")
+  paidAt        DateTime?       @map("paid_at")
+  status        PaymentStatus   @default(PENDING)
+  paymentMethod String?         @map("payment_method")
+  invoiceNumber String?         @map("invoice_number")
+  // Referência da transação no gateway (Mercado Pago: payment id)
+  transactionId String?         @map("transaction_id")
+  notes         String?
+  tenantId      String?          @map("tenant_id")
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+  deletedAt     DateTime?       @map("deleted_at")
+
+  enrollment Enrollment? @relation(fields: [enrollmentId], references: [id])
+  company    Company?    @relation(fields: [companyId], references: [id])
+  tenant     Tenant?      @relation(fields: [tenantId], references: [id])
+
+  @@index([status])
+  @@index([dueDate])
+  @@index([type])
+  @@index([kind])
+  @@index([companyId])
+  @@index([tenantId])
+  @@index([deletedAt])
+  @@map("payments")
+}
+
+enum PaymentKind {
+  ENROLLMENT // Pagamento de matrícula de aluno
+  SUBSCRIPTION_FEE // Fatura da assinatura SaaS do tenant (billing da plataforma)
+  OTHER // Lançamento manual de receita/despesa (createIncome/createExpense)
+}
+
+enum PaymentType {
+  INCOME // Receita
+  EXPENSE // Despesa
+}
+
+enum PaymentCategory {
+  COURSE_FEE // Taxa de curso
+  EQUIPMENT // Equipamentos
+  MATERIAL // Material didático
+  INSTRUCTOR_FEE // Pagamento instrutor
+  MAINTENANCE // Manutenção
+  UTILITIES // Utilidades
+  RENT // Aluguel
+  MARKETING // Marketing
+  OTHER // Outros
+}
+
+enum PaymentStatus {
+  PENDING // Pendente
+  PAID // Pago
+  OVERDUE // Atrasado
+  CANCELLED // Cancelado
+}
+
+// ============================================
+// CUSTOS OPERACIONAIS
+// ============================================
+model Cost {
+  id          String       @id @default(uuid())
+  category    CostCategory
+  description String
+  amount      Decimal      @db.Decimal(10, 2)
+  period      DateTime
+  isRecurring Boolean      @default(false) @map("is_recurring")
+  isAuditable Boolean      @default(false) @map("is_auditable") // Custo auditável (M00)
+  notes       String?
+  tenantId    String?       @map("tenant_id")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  deletedAt   DateTime?    @map("deleted_at")
+
+  tenant  Tenant?        @relation(fields: [tenantId], references: [id])
+  courses CourseCost[] // Vínculo com cursos (M01)
+  entries CostEntry[]
+
+  @@index([category])
+  @@index([period])
+  @@index([tenantId])
+  @@index([isAuditable])
+  @@index([deletedAt])
+  @@map("costs")
+}
+
+// ============================================
+// CRITÉRIOS DE CUSTO (Módulo 08)
+// ============================================
+model CostCriterion {
+  id               String             @id @default(uuid())
+  code             String             // CR0001, CR0002... — único por tenant (ver @@unique)
+  name             String
+  frequency        CostFrequency
+  linkage          CostLinkage
+  dueCriterion     CostDueCriterion   @map("due_criterion")
+  daysUntilDue     Int?               @map("days_until_due")
+  monthlyClosingDay Int?              @map("monthly_closing_day")
+  daysAfterClosing Int?               @map("days_after_closing")
+  isActive         Boolean            @default(true) @map("is_active")
+  notes            String?
+  tenantId         String?             @map("tenant_id")
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+  deletedAt        DateTime?          @map("deleted_at")
+  entries          CostEntry[]
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, code])
+  @@index([frequency])
+  @@index([tenantId])
+  @@index([isActive])
+  @@index([deletedAt])
+  @@map("cost_criteria")
+}
+
+model CostEntry {
+  id              String          @id @default(uuid())
+  code            String // Único por tenant (ver @@unique) — antes era global
+  auditableCostId String          @map("auditable_cost_id")
+  costCriterionId String?         @map("cost_criterion_id")
+  studentId       String?         @map("student_id")
+  classId         String?         @map("class_id")
+  supplierId      String?         @map("supplier_id")
+  instructorId    String?         @map("instructor_id")
+  companyId       String?         @map("company_id")
+  examNumber      String?         @map("exam_number")
+  examName        String?         @map("exam_name")
+  value           Decimal         @db.Decimal(10, 2)
+  generatedAt     DateTime        @map("generated_at")
+  dueDate         DateTime        @map("due_date")
+  paidAt          DateTime?       @map("paid_at")
+  status          CostEntryStatus @default(PENDING)
+  notes           String?
+  autoGenerated   Boolean         @default(false) @map("auto_generated")
+  triggerAction   String?         @map("trigger_action")
+  tenantId        String?          @map("tenant_id")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  deletedAt       DateTime?       @map("deleted_at")
+
+  auditableCost Cost          @relation(fields: [auditableCostId], references: [id])
+  costCriterion CostCriterion? @relation(fields: [costCriterionId], references: [id])
+  student       Student?      @relation(fields: [studentId], references: [id])
+  class         Class?        @relation(fields: [classId], references: [id])
+  supplier      Supplier?     @relation(fields: [supplierId], references: [id])
+  instructor    Instructor?   @relation(fields: [instructorId], references: [id])
+  company       Company?      @relation(fields: [companyId], references: [id])
+  tenant        Tenant?        @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, code])
+  @@index([auditableCostId])
+  @@index([costCriterionId])
+  @@index([studentId])
+  @@index([classId])
+  @@index([supplierId])
+  @@index([instructorId])
+  @@index([companyId])
+  @@index([tenantId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([deletedAt])
+  @@map("cost_entries")
+}
+
+enum CostEntryStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum CostFrequency {
+  MONTHLY
+  DAILY
+  ONE_TIME
+}
+
+enum CostLinkage {
+  ENROLLED_STUDENT
+  NOT_LINKED
+  INSTRUCTOR
+}
+
+enum CostDueCriterion {
+  COURSE_END_DATE
+  THIRTY_DAYS_AFTER_END
+  MONTHLY_CLOSING
+  SPECIFIC_DATE
+  NO_DUE
+}
+
+enum CostCategory {
+  FIXED // Custos fixos
+  VARIABLE // Custos variáveis
+  PERSONNEL // Pessoal
+  INFRASTRUCTURE // Infraestrutura
+  EQUIPMENT // Equipamentos
+  MATERIAL // Materiais
+  SERVICES // Serviços
+  OTHER // Outros
+}
+
+// ============================================
+// PRODUTOS EXTRAS
+// ============================================
+model ExtraProduct {
+  id          String    @id @default(uuid())
+  code        String? // Único por tenant quando informado (ver @@unique)
+  name        String
+  type        String    @default("extra")
+  description String?
+  price       Decimal   @db.Decimal(10, 2)
+  stock       Int       @default(0)
+  associatedCostIds String[] @default([]) @map("associated_cost_ids")
+  isActive    Boolean   @default(true) @map("is_active")
+  tenantId    String?    @map("tenant_id")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  tenant      Tenant?                   @relation(fields: [tenantId], references: [id])
+  enrollments EnrollmentExtraProduct[] // Venda extra por aluno (M03)
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([isActive])
+  @@index([deletedAt])
+  @@map("extra_products")
+}
+
+// ============================================
+// FORNECEDORES
+// ============================================
+model Supplier {
+  id        String    @id @default(uuid())
+  code      String? // Único por tenant quando informado (ver @@unique)
+  name      String
+  tradeName String?   @map("trade_name")
+  cnpj      String? // Único por tenant quando informado (ver @@unique)
+  email     String?
+  phone     String?
+  address   String?
+  category  String? // Tipo de fornecimento
+  notes     String?
+  isActive  Boolean   @default(true) @map("is_active")
+  tenantId  String?    @map("tenant_id")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  costEntries CostEntry[]
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, code])
+  @@unique([tenantId, cnpj])
+  @@index([tenantId])
+  @@index([isActive])
+  @@index([deletedAt])
+  @@map("suppliers")
+}
+
+// ============================================
+// INSTRUTORES
+// ============================================
+model Instructor {
+  id          String   @id @default(uuid())
+  name        String
+  cpf         String? // Único por tenant quando informado (ver @@unique)
+  email       String?
+  phone       String?
+  role        String?
+  specialties String[] @default([]) // Array de especialidades
+
+  costPerHour Decimal? @map("cost_per_hour") @db.Decimal(10, 2)
+  costPerDay  Decimal? @map("cost_per_day") @db.Decimal(10, 2)
+
+  // Valores por tipo de serviço (M00)
+  classHourlyRate Decimal? @map("class_hourly_rate") @db.Decimal(10, 2) // Valor/hora aula
+  examHourlyRate  Decimal? @map("exam_hourly_rate") @db.Decimal(10, 2) // Valor/hora prova
+
+  notes     String?
+  isActive  Boolean   @default(true) @map("is_active")
+  tenantId  String?    @map("tenant_id")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  tenant      Tenant?      @relation(fields: [tenantId], references: [id])
+  classes     Class[] // Relação com turmas
+  exams       Exam[] // Relação com provas
+  costEntries CostEntry[]
+  classInstructors ClassInstructor[]
+
+  @@unique([tenantId, cpf])
+  @@index([tenantId])
+  @@index([isActive])
+  @@index([deletedAt])
+  @@map("instructors")
+}
+
+// ============================================
+// NOVOS MODELS - MÓDULOS FIGMA
+// ============================================
+
+// ============================================
+// MÓDULO 01: VÍNCULO CURSO-CUSTO (N:N)
+// ============================================
+model CourseCost {
+  id        String    @id @default(uuid())
+  courseId  String    @map("course_id")
+  costId    String    @map("cost_id")
+  tenantId  String?    @map("tenant_id")
+  createdAt DateTime  @default(now()) @map("created_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  cost   Cost   @relation(fields: [costId], references: [id], onDelete: Cascade)
+  tenant Tenant? @relation(fields: [tenantId], references: [id])
+
+  @@unique([courseId, costId])
+  @@index([courseId])
+  @@index([costId])
+  @@index([tenantId])
+  @@index([deletedAt])
+  @@map("course_costs")
+}
+
+// ============================================
+// MÓDULO 03: DOCUMENTOS DO ALUNO ([DOC])
+// ============================================
+model StudentDocument {
+  id             String         @id @default(uuid())
+  studentId      String         @map("student_id")
+  documentType   String         @map("document_type") // "RG", "CPF", "ASO", "Foto 3x4", etc.
+  fileUrl        String         @map("file_url")
+  fileName       String?        @map("file_name")
+  fileSize       Int?           @map("file_size") // Bytes
+  mimeType       String?        @map("mime_type")
+  uploadedAt     DateTime       @default(now()) @map("uploaded_at")
+  status         DocumentStatus @default(PENDING)
+  validatedBy    String?        @map("validated_by") // FK User (quem aprovou)
+  validatedAt    DateTime?      @map("validated_at")
+  rejectedReason String?        @map("rejected_reason")
+  notes          String?
+  tenantId       String?         @map("tenant_id")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+  deletedAt      DateTime?      @map("deleted_at")
+
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  validator User?   @relation("DocumentValidations", fields: [validatedBy], references: [id])
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id])
+
+  @@index([studentId])
+  @@index([documentType])
+  @@index([tenantId])
+  @@index([status])
+  @@index([validatedBy])
+  @@index([deletedAt])
+  @@map("student_documents")
+}
+
+enum DocumentStatus {
+  PENDING // Vermelho - Documentos pendentes
+  COMPLETE // Verde - Tudo OK
+  REJECTED // Rejeitado - precisa reenviar
+}
+
+// ============================================
+// MÓDULO 03: PROVAS ([PROVA])
+// ============================================
+model Exam {
+  id            String     @id @default(uuid())
+  examCode      String     @map("exam_code") // Código sequencial P0001, P0002... — único por tenant
+  enrollmentId  String     @map("enrollment_id")
+  courseId      String     @map("course_id")
+  instructorId  String     @map("instructor_id")
+  examNumber    String     @map("exam_number") // Número da prova (ex: "P001")
+  examType      String?    @map("exam_type") // "Teórica", "Prática", etc.
+  scheduledDate DateTime   @map("scheduled_date")
+  scheduledTime String     @map("scheduled_time") // Ex: "14:00"
+  duration      Int? // Minutos
+  status        ExamStatus @default(SCHEDULED)
+  score         Decimal?   @db.Decimal(5, 2) // Nota (0-100)
+  passed        Boolean?
+  notes         String?
+  tenantId      String?     @map("tenant_id")
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+  deletedAt     DateTime?  @map("deleted_at")
+
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  course     Course     @relation(fields: [courseId], references: [id])
+  instructor Instructor @relation(fields: [instructorId], references: [id])
+  tenant     Tenant?     @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, examCode])
+  @@index([enrollmentId])
+  @@index([courseId])
+  @@index([instructorId])
+  @@index([tenantId])
+  @@index([scheduledDate])
+  @@index([status])
+  @@index([deletedAt])
+  @@map("exams")
+}
+
+enum ExamStatus {
+  SCHEDULED // Cinza - Agendado (bloqueado se DOC vermelho)
+  IN_PROGRESS // Azul - Em andamento
+  COMPLETED // Verde - Realizado
+  APPROVED // Verde - Aprovado
+  FAILED // Vermelho - Reprovado
+  CANCELLED // Cancelado
+}
+
+// ============================================
+// MÓDULO 03: PRODUTOS EXTRAS POR MATRÍCULA
+// ============================================
+model EnrollmentExtraProduct {
+  id             String    @id @default(uuid())
+  enrollmentId   String    @map("enrollment_id")
+  extraProductId String    @map("extra_product_id")
+  quantity       Int       @default(1)
+  unitPrice      Decimal   @map("unit_price") @db.Decimal(10, 2) // Preço no momento da venda
+  totalPrice     Decimal   @map("total_price") @db.Decimal(10, 2) // quantity * unitPrice
+  notes          String?
+  tenantId       String?    @map("tenant_id")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
+
+  enrollment   Enrollment   @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  extraProduct ExtraProduct @relation(fields: [extraProductId], references: [id])
+  tenant       Tenant?       @relation(fields: [tenantId], references: [id])
+
+  @@unique([enrollmentId, extraProductId])
+  @@index([enrollmentId])
+  @@index([extraProductId])
+  @@index([tenantId])
+  @@index([deletedAt])
+  @@map("enrollment_extra_products")
+}
+
+// ============================================
+// AUDIT LOG
+// ============================================
+model AuditLog {
+  id          String      @id @default(uuid())
+  tableName   String      @map("table_name")
+  recordId    String      @map("record_id")
+  action      AuditAction
+  userId      String?     @map("user_id")
+  // Nullable: auditoria da plataforma (MASTER) não pertence a tenant
+  tenantId    String?     @map("tenant_id")
+  oldData     Json?       @map("old_data")
+  newData     Json?       @map("new_data")
+  ipAddress   String?     @map("ip_address")
+  userAgent   String?     @map("user_agent")
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  user   User?   @relation("UserAuditLogs", fields: [userId], references: [id], onDelete: SetNull)
+  tenant Tenant? @relation(fields: [tenantId], references: [id])
+
+  @@index([tableName])
+  @@index([recordId])
+  @@index([userId])
+  @@index([tenantId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+// ============================================
+// CERTIFICADOS
+// ============================================
+model Certificate {
+  id                String            @id @default(uuid())
+  code              String            // CERT0001, CERT0002... — único por tenant
+  certificateNumber String            @map("certificate_number") // Único por tenant — antes global impedia dois tenants de emitirem o certificado "00001"
+  enrollmentId      String            @unique @map("enrollment_id") // 1:1 com Enrollment
+  studentId         String            @map("student_id")
+  courseId           String            @map("course_id")
+  templateId        String?           @map("template_id")
+  status            CertificateStatus @default(DRAFT)
+  issuedAt          DateTime?         @map("issued_at")
+  expiresAt         DateTime?         @map("expires_at")
+  validityMonths    Int               @map("validity_months")
+  fileUrl           String?           @map("file_url")
+  metadata          Json?             @default("{}") // Nota, carga horária, etc.
+  revokedAt         DateTime?         @map("revoked_at")
+  revokedReason     String?           @map("revoked_reason")
+  issuedById        String?           @map("issued_by_id")
+  tenantId          String?            @map("tenant_id")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  deletedAt         DateTime?         @map("deleted_at")
+
+  enrollment Enrollment           @relation(fields: [enrollmentId], references: [id])
+  student    Student              @relation(fields: [studentId], references: [id])
+  course     Course               @relation(fields: [courseId], references: [id])
+  template   CertificateTemplate? @relation(fields: [templateId], references: [id])
+  issuedBy   User?                @relation("CertificateIssuer", fields: [issuedById], references: [id])
+  tenant     Tenant?               @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, code])
+  @@unique([tenantId, certificateNumber])
+  @@index([enrollmentId])
+  @@index([studentId])
+  @@index([courseId])
+  @@index([tenantId])
+  @@index([status])
+  @@index([issuedAt])
+  @@index([deletedAt])
+  @@map("certificates")
+}
+
+model CertificateTemplate {
+  id                String    @id @default(uuid())
+  name              String
+  courseId          String?   @map("course_id")
+  htmlTemplate      String    @map("html_template") @db.Text
+  headerImageUrl    String?   @map("header_image_url")
+  footerImageUrl    String?   @map("footer_image_url")
+  signatureImageUrl String?   @map("signature_image_url")
+  logoUrl           String?   @map("logo_url")
+  isDefault         Boolean   @default(false) @map("is_default")
+  isActive          Boolean   @default(true) @map("is_active")
+  tenantId          String?    @map("tenant_id")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  deletedAt         DateTime? @map("deleted_at")
+
+  tenant       Tenant?        @relation(fields: [tenantId], references: [id])
+  certificates Certificate[]
+
+  @@index([courseId])
+  @@index([tenantId])
+  @@index([isDefault])
+  @@index([isActive])
+  @@index([deletedAt])
+  @@map("certificate_templates")
+}
+
+enum CertificateStatus {
+  DRAFT   // Rascunho
+  ISSUED  // Emitido
+  EXPIRED // Expirado
+  REVOKED // Revogado
+}
+
+// ============================================
+// CRM — CONTATOS
+// ============================================
+model CRMContact {
+  id            String           @id @default(uuid())
+  code          String           // C0001, C0002... — único por tenant
+  name          String
+  email         String?
+  phone         String?
+  company       String? // Nome da empresa (texto livre)
+  cpfCnpj       String?          @map("cpf_cnpj")
+  source        CRMContactSource @default(MANUAL)
+  status        CRMContactStatus @default(LEAD)
+  assignedToId  String?          @map("assigned_to_id")
+  studentId     String?          @map("student_id")
+  companyId     String?          @map("company_id")
+  tags          String[]         @default([])
+  notes         String?          @db.Text
+  customFields  Json?            @default("{}") @map("custom_fields")
+  lastContactAt DateTime?        @map("last_contact_at")
+  tenantId      String?           @map("tenant_id")
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+  deletedAt     DateTime?        @map("deleted_at")
+
+  assignedTo User?         @relation("CRMAssignedContacts", fields: [assignedToId], references: [id])
+  student    Student?      @relation(fields: [studentId], references: [id])
+  companyRef Company?      @relation(fields: [companyId], references: [id])
+  tenant     Tenant?        @relation(fields: [tenantId], references: [id])
+  activities CRMActivity[]
+  deals      CRMDeal[]
+
+  @@unique([tenantId, code])
+  @@index([name])
+  @@index([email])
+  @@index([phone])
+  @@index([source])
+  @@index([status])
+  @@index([assignedToId])
+  @@index([studentId])
+  @@index([companyId])
+  @@index([tenantId])
+  @@index([deletedAt])
+  @@map("crm_contacts")
+}
+
+// ============================================
+// CRM — ATIVIDADES / INTERAÇÕES
+// ============================================
+model CRMActivity {
+  id          String          @id @default(uuid())
+  contactId   String          @map("contact_id")
+  type        CRMActivityType
+  title       String
+  description String?         @db.Text
+  scheduledAt DateTime?       @map("scheduled_at")
+  completedAt DateTime?       @map("completed_at")
+  createdById String          @map("created_by_id")
+  metadata    Json?           @default("{}") // Dados extras
+  tenantId    String?          @map("tenant_id")
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+  deletedAt   DateTime?       @map("deleted_at")
+
+  contact   CRMContact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  createdBy User       @relation("CRMActivityCreator", fields: [createdById], references: [id])
+  tenant    Tenant?     @relation(fields: [tenantId], references: [id])
+
+  @@index([contactId])
+  @@index([type])
+  @@index([scheduledAt])
+  @@index([completedAt])
+  @@index([createdById])
+  @@index([tenantId])
+  @@index([deletedAt])
+  @@map("crm_activities")
+}
+
+// ============================================
+// CRM — ETAPAS DO FUNIL
+// ============================================
+model CRMPipelineStage {
+  id        String    @id @default(uuid())
+  name      String
+  order     Int
+  color     String    @default("#6366f1")
+  isDefault Boolean   @default(false) @map("is_default")
+  isActive  Boolean   @default(true) @map("is_active")
+  tenantId  String?    @map("tenant_id")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  tenant Tenant?    @relation(fields: [tenantId], references: [id])
+  deals  CRMDeal[]
+
+  @@index([order])
+  @@index([tenantId])
+  @@index([isActive])
+  @@index([deletedAt])
+  @@map("crm_pipeline_stages")
+}
+
+// ============================================
+// CRM — NEGÓCIOS / OPORTUNIDADES
+// ============================================
+model CRMDeal {
+  id                String        @id @default(uuid())
+  code              String        // D0001, D0002... — único por tenant
+  contactId         String        @map("contact_id")
+  stageId           String        @map("stage_id")
+  title             String
+  value             Decimal       @db.Decimal(10, 2)
+  expectedCloseDate DateTime?     @map("expected_close_date")
+  status            CRMDealStatus @default(OPEN)
+  courseId           String?      @map("course_id")
+  classId            String?      @map("class_id")
+  wonAt             DateTime?     @map("won_at")
+  lostAt            DateTime?     @map("lost_at")
+  lostReason        String?       @map("lost_reason")
+  notes             String?       @db.Text
+  tenantId          String?        @map("tenant_id")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+  deletedAt         DateTime?     @map("deleted_at")
+
+  contact CRMContact       @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  stage   CRMPipelineStage @relation(fields: [stageId], references: [id])
+  tenant  Tenant?           @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, code])
+  @@index([contactId])
+  @@index([stageId])
+  @@index([status])
+  @@index([courseId])
+  @@index([tenantId])
+  @@index([expectedCloseDate])
+  @@index([deletedAt])
+  @@map("crm_deals")
+}
+
+// ============================================
+// ENUMS — CERTIFICADOS
+// ============================================
+
+// CertificateStatus já declarado acima
+
+// ============================================
+// ENUMS — CRM
+// ============================================
+enum CRMContactSource {
+  MANUAL
+  IMPORT
+  WEBSITE
+  WHATSAPP
+  REFERRAL
+  COMPANY
+}
+
+enum CRMContactStatus {
+  LEAD
+  QUALIFIED
+  INTERESTED
+  NEGOTIATION
+  ENROLLED
+  LOST
+}
+
+enum CRMActivityType {
+  CALL
+  EMAIL
+  WHATSAPP
+  MEETING
+  NOTE
+  TASK
+  FOLLOW_UP
+}
+
+enum CRMDealStatus {
+  OPEN
+  WON
+  LOST
+}

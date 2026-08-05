@@ -1,0 +1,64 @@
+# ============================================
+# SMCORP Backend - .dockerignore
+# ============================================
+
+# Dependências (reinstaladas no container)
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build
+dist
+build
+
+# TypeScript
+*.tsbuildinfo
+
+# Testes
+coverage
+*.spec.ts
+*.test.ts
+test
+__tests__
+jest.config.*
+
+# IDE / Editor
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Git
+.git
+.gitignore
+
+# Docker (evitar recursão)
+Dockerfile
+Dockerfile.prod
+docker-compose*.yml
+.dockerignore
+
+# Variáveis de ambiente
+.env
+.env.*
+!.env.example
+
+# Documentação
+*.md
+LICENSE
+docs
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Prisma migrations (mantém schema mas ignora migrations dev)
+# prisma/migrations é copiado explicitamente no Dockerfile
+
+# Temporários
+tmp
+temp
+.cache

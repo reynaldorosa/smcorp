@@ -1,0 +1,10 @@
+Removendo linhas 1855-1973 que estavam com aspas escapadas incorretamente.
+
+Bloco a remover:
+- Linha 1855: // 🆕 Se é um lançamento consolidado
+- Linha 1856: const lancamento = grupo.lancamentos[0];
+- Linha 1857-1972: Todo o bloco com className=\"...\"
+
+Substituir por:
+- Manter apenas: const lancamento = grupo.lancamentos[0];
+- Manter o código original que funciona (isGrupoDiario)

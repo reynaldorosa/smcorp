@@ -1,0 +1,121 @@
+services:
+  # ====================================
+  # PostgreSQL Database
+  # ====================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: smcorp_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-smcorp}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-smcorp123}
+      POSTGRES_DB: ${DB_NAME:-smcorp_db}
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-smcorp} -d ${DB_NAME:-smcorp_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - smcorp_network
+
+  # ====================================
+  # Backend NestJS
+  # ====================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: smcorp_backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://${DB_USER:-smcorp}:${DB_PASSWORD:-smcorp123}@postgres:5432/${DB_NAME:-smcorp_db}
+      JWT_SECRET: ${JWT_SECRET:-smcorp-jwt-secret-key-change-in-production}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-smcorp-refresh-secret-key-change-in-production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-dev-encryption-key-change-me}
+      ENCRYPTION_SALT: ${ENCRYPTION_SALT:-dev-encryption-salt-change-me}
+      MERCADO_PAGO_ACCESS_TOKEN: ${MERCADO_PAGO_ACCESS_TOKEN:-}
+      MERCADO_PAGO_WEBHOOK_SECRET: ${MERCADO_PAGO_WEBHOOK_SECRET:-}
+      MERCADO_PAGO_WEBHOOK_URL: ${MERCADO_PAGO_WEBHOOK_URL:-}
+      MESSAGING_API_URL: ${MESSAGING_API_URL:-https://connect.uniqsuporte.com.br}
+      MESSAGING_API_KEY: ${MESSAGING_API_KEY:-}
+      MESSAGING_API_KEY_HEADER: ${MESSAGING_API_KEY_HEADER:-Api-key}
+      PORT: 3001
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3005}
+      APP_URL: ${APP_URL:-http://localhost:3005}
+      INSTITUTION_NAME: ${INSTITUTION_NAME:-SMCORP}
+      # Seed & Admin credentials
+      SEED_ON_STARTUP: ${SEED_ON_STARTUP:-true}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@smcorp.com.br}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@123}
+      MASTER_EMAIL: ${MASTER_EMAIL:-master@smcorp.com.br}
+      MASTER_PASSWORD: ${MASTER_PASSWORD:-Admin@123}
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: sh -c "./entrypoint.sh"
+    networks:
+      - smcorp_network
+
+  # ====================================
+  # Frontend Next.js
+  # ====================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: smcorp_frontend
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api/v1}
+      NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-SMCORP}
+      NEXT_PUBLIC_PUBLIC_ENROLLMENT_BASE_URL: ${NEXT_PUBLIC_PUBLIC_ENROLLMENT_BASE_URL:-http://localhost:3005}
+      NEXT_PUBLIC_INSTITUTION_WHATSAPP_NUMBER: ${NEXT_PUBLIC_INSTITUTION_WHATSAPP_NUMBER:-}
+      NEXT_PUBLIC_INSTITUTION_PHONE: ${NEXT_PUBLIC_INSTITUTION_PHONE:-}
+    ports:
+      - "3005:3000"
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+    # Modo PRODUÇÃO (build + standalone server): compila uma vez e serve rápido.
+    # Para hot-reload em dev: rode `npm run dev` fora do Docker.
+    command: sh -c "npm run build && cp -r .next/static .next/standalone/.next/static && node .next/standalone/server.js"
+    networks:
+      - smcorp_network
+
+  # ====================================
+  # Adminer (Database GUI)
+  # ====================================
+  adminer:
+    image: adminer:latest
+    container_name: smcorp_adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    depends_on:
+      - postgres
+    networks:
+      - smcorp_network
+
+volumes:
+  postgres_data:
+    driver: local
+  frontend_node_modules:
+    driver: local
+
+networks:
+  smcorp_network:
+    driver: bridge

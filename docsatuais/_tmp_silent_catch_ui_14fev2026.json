@@ -1,0 +1,206 @@
+[
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\providers.tsx",
+    "line": 76,
+    "kind": "empty_catch",
+    "snippet": "// Se falhar, mantemos o estado atual (sem inventar dados)."
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\certificados\\page.tsx",
+    "line": 98,
+    "kind": "empty_catch",
+    "snippet": "// API indisponível"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\certificados\\page.tsx",
+    "line": 111,
+    "kind": "empty_catch",
+    "snippet": "// API indisponível"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\certificados\\page.tsx",
+    "line": 124,
+    "kind": "empty_catch",
+    "snippet": "// API indisponível"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\certificados\\page.tsx",
+    "line": 297,
+    "kind": "empty_catch",
+    "snippet": "// manter fallback de mensagem mesmo sem refresh"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\costs\\page.tsx",
+    "line": 94,
+    "kind": "no_user_feedback",
+    "snippet": "return null;"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\crm\\page.tsx",
+    "line": 216,
+    "kind": "empty_catch",
+    "snippet": "// Sem API/sem sessão: manter o store atual (persistido/local)"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\crm\\page.tsx",
+    "line": 234,
+    "kind": "empty_catch",
+    "snippet": "// API não disponível"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\crm\\page.tsx",
+    "line": 259,
+    "kind": "empty_catch",
+    "snippet": "// API não disponível — fallback local"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\documents\\page.tsx",
+    "line": 59,
+    "kind": "empty_catch",
+    "snippet": "// API indisponível — manter store/persist"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\documents\\page.tsx",
+    "line": 72,
+    "kind": "empty_catch",
+    "snippet": "// API indisponível"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\documents\\page.tsx",
+    "line": 85,
+    "kind": "empty_catch",
+    "snippet": "// API indisponível"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\documents\\page.tsx",
+    "line": 110,
+    "kind": "empty_catch",
+    "snippet": "// API indisponível"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\vendas\\page.tsx",
+    "line": 290,
+    "kind": "empty_catch",
+    "snippet": "// API indisponível — manter store/persist"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\vendas\\page.tsx",
+    "line": 305,
+    "kind": "empty_catch",
+    "snippet": "// API indisponível"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\vendas\\page.tsx",
+    "line": 391,
+    "kind": "empty_catch",
+    "snippet": "// CRM indisponível: mantém fallback local"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\vendas\\page.tsx",
+    "line": 694,
+    "kind": "empty_catch",
+    "snippet": "// Não bloquear UX caso CRM de atividades falhe"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\portal-cliente\\dashboard\\page.tsx",
+    "line": 185,
+    "kind": "no_user_feedback",
+    "snippet": "handleLogout();"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\classes\\class-list.tsx",
+    "line": 251,
+    "kind": "no_user_feedback",
+    "snippet": "skipped += 1;"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\dashboard\\edit-course-modal-v2.tsx",
+    "line": 93,
+    "kind": "no_user_feedback",
+    "snippet": "return [];"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\dashboard\\edit-course-modal-v2.tsx",
+    "line": 100,
+    "kind": "no_user_feedback",
+    "snippet": "return [];"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\documents\\administrative-document.tsx",
+    "line": 90,
+    "kind": "no_user_feedback",
+    "snippet": "return dateString;"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\documents\\student-documents-detail.tsx",
+    "line": 103,
+    "kind": "no_user_feedback",
+    "snippet": "return dateString;"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\documents\\student-documents-detail.tsx",
+    "line": 112,
+    "kind": "no_user_feedback",
+    "snippet": "return dateString;"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\documents\\student-documents-detail.tsx",
+    "line": 151,
+    "kind": "no_user_feedback",
+    "snippet": "setApiDocuments([]);"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\documents\\student-documents-detail.tsx",
+    "line": 184,
+    "kind": "no_user_feedback",
+    "snippet": "textValue = parts[1] || '';"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\documents\\student-documents-detail.tsx",
+    "line": 217,
+    "kind": "empty_catch",
+    "snippet": "// ignore"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\enrollment\\student-enrollment-page.tsx",
+    "line": 87,
+    "kind": "no_user_feedback",
+    "snippet": "return dateStr;"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\operational\\operational-dashboard.tsx",
+    "line": 1036,
+    "kind": "empty_catch",
+    "snippet": "// fallback silencioso: manter fluxo com token local se API de token falhar"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\settings\\backup-tab.tsx",
+    "line": 346,
+    "kind": "no_user_feedback",
+    "snippet": "setBackupHistory((prev) => [ { id: `${Date.now()"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\settings\\backup-tab.tsx",
+    "line": 389,
+    "kind": "empty_catch",
+    "snippet": "// Se API estiver indisponível, mantemos contagens em 0."
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\settings\\download-complete-project.tsx",
+    "line": 51,
+    "kind": "no_user_feedback",
+    "snippet": "return '';"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\settings\\persistence-diagnostic.tsx",
+    "line": 83,
+    "kind": "no_user_feedback",
+    "snippet": "/* parse error — count stays 0 */"
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\ui\\confirmation-dialog.tsx",
+    "line": 119,
+    "kind": "no_user_feedback",
+    "snippet": "setPinError('PIN incorreto. Tente novamente.'); setPin(''); return;"
+  }
+]

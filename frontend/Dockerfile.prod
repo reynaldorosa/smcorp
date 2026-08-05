@@ -1,0 +1,86 @@
+# ============================================
+# SMCORP Frontend - Production Dockerfile
+# Next.js com standalone output
+# ============================================
+
+# ---- Stage 1: Dependencies ----
+FROM node:20-alpine AS deps
+
+WORKDIR /app
+
+RUN apk add --no-cache libc6-compat
+
+# Copiar apenas arquivos de dependência (melhor cache)
+COPY package.json package-lock.json* ./
+
+# Instalar todas dependências (precisa de devDeps para build)
+RUN npm ci
+
+# ---- Stage 2: Build ----
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/package.json ./package.json
+
+# Copiar código fonte
+COPY src ./src
+COPY next.config.js tsconfig.json tailwind.config.ts postcss.config.js components.json ./
+
+# Build arguments (variáveis públicas injetadas no build)
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_APP_NAME=SMCORP
+ARG NEXT_BUILD_IGNORE_LINT=true
+
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_APP_NAME=$NEXT_PUBLIC_APP_NAME
+ENV NEXT_BUILD_IGNORE_LINT=$NEXT_BUILD_IGNORE_LINT
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Build Next.js (gera standalone)
+RUN npm run build
+
+# ---- Stage 3: Production ----
+FROM node:20-alpine AS production
+
+# Labels
+LABEL maintainer="SMCORP Team"
+LABEL description="SMCORP Frontend - Production"
+LABEL version="1.0.0"
+
+WORKDIR /app
+
+# Dependências mínimas + usuário não-root
+RUN apk add --no-cache \
+    libc6-compat \
+    curl \
+    tini \
+    && addgroup -g 1001 -S nodejs \
+    && adduser -S nextjs -u 1001 -G nodejs
+
+# Copiar standalone build
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Variáveis de ambiente padrão
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Mudar para usuário não-root
+USER nextjs
+
+# Expor porta
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
+  CMD curl -f http://localhost:3000 || exit 1
+
+# Usar tini como init
+ENTRYPOINT ["/sbin/tini", "--"]
+
+# Iniciar Next.js standalone
+CMD ["node", "server.js"]

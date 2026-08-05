@@ -1,0 +1,149 @@
+[
+  {
+    "kind": "Button",
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\certificados\\page.tsx",
+    "line": 612,
+    "empty_handler": false,
+    "attrs": "size=\"sm\" variant=\"ghost\" className=\"h-7 text-xs\""
+  },
+  {
+    "kind": "Button",
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\cliente-pj\\page.tsx",
+    "line": 383,
+    "empty_handler": false,
+    "attrs": "size=\"sm\" className=\"bg-red-600 text-white hover:bg-red-700 rounded-none px-4 py-2.5 h-auto font-medium text-sm shadow-md border border-red-700\""
+  },
+  {
+    "kind": "Button",
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\settings\\page.tsx",
+    "line": 312,
+    "empty_handler": false,
+    "attrs": "variant=\"outline\" size=\"sm\" className=\"h-8\""
+  },
+  {
+    "kind": "Button",
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\settings\\page.tsx",
+    "line": 448,
+    "empty_handler": false,
+    "attrs": "variant=\"outline\" size=\"sm\" className=\"h-8\""
+  },
+  {
+    "kind": "Button",
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\settings\\page.tsx",
+    "line": 618,
+    "empty_handler": false,
+    "attrs": "variant=\"outline\" size=\"sm\""
+  },
+  {
+    "kind": "Button",
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\settings\\page.tsx",
+    "line": 632,
+    "empty_handler": false,
+    "attrs": "variant=\"outline\""
+  },
+  {
+    "kind": "Button",
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\settings\\page.tsx",
+    "line": 640,
+    "empty_handler": false,
+    "attrs": "variant=\"outline\" size=\"sm\""
+  },
+  {
+    "kind": "Button",
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\settings\\page.tsx",
+    "line": 657,
+    "empty_handler": false,
+    "attrs": "variant=\"outline\""
+  },
+  {
+    "kind": "Button",
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\login\\page.tsx",
+    "line": 226,
+    "empty_handler": false,
+    "attrs": "disabled={isLoading} className=\"h-11 mt-2 bg-red-600 hover:bg-red-700 text-white font-medium shadow-lg shadow-red-900/20 transition-all hover:scale-[1.01]\""
+  },
+  {
+    "kind": "Button",
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\dashboard\\create-class-form.tsx",
+    "line": 382,
+    "empty_handler": false,
+    "attrs": "variant=\"outline\" className=\"w-full justify-start\""
+  },
+  {
+    "kind": "Button",
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\dashboard\\exam-modal.tsx",
+    "line": 405,
+    "empty_handler": false,
+    "attrs": "variant=\"outline\" className=\"w-full justify-start\""
+  },
+  {
+    "kind": "Button",
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\dashboard\\exam-modal.tsx",
+    "line": 552,
+    "empty_handler": false,
+    "attrs": "variant=\"outline\" className=\"w-full justify-start\""
+  },
+  {
+    "kind": "Button",
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\dashboard\\instructor-class-card.tsx",
+    "line": 159,
+    "empty_handler": false,
+    "attrs": "variant=\"outline\" size=\"sm\" className=\"w-full h-7 text-xs bg-purple-100 border-purple-300 text-purple-700 hover:bg-green-50 hover:border-green-500 hover:text-green-700\""
+  },
+  {
+    "kind": "Button",
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\dashboard\\payment-modal.tsx",
+    "line": 196,
+    "empty_handler": false,
+    "attrs": "variant=\"outline\" className=\"w-full justify-start\""
+  },
+  {
+    "kind": "Button",
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\dashboard\\payment-modal.tsx",
+    "line": 260,
+    "empty_handler": false,
+    "attrs": "variant=\"outline\" className=\"w-full justify-start\""
+  },
+  {
+    "kind": "Button",
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\financial\\dialogs\\delete-cost-entry-dialog.tsx",
+    "line": 77,
+    "empty_handler": false,
+    "attrs": "variant=\"destructive\" size=\"sm\" className=\"gap-2\""
+  },
+  {
+    "kind": "Button",
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\layout\\floating-test-buttons.tsx",
+    "line": 113,
+    "empty_handler": false,
+    "attrs": "variant=\"outline\" size=\"sm\" className=\"bg-white shadow-lg border-2 border-blue-600 text-blue-600 hover:bg-blue-50\""
+  },
+  {
+    "kind": "Button",
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\layout\\header.tsx",
+    "line": 54,
+    "empty_handler": false,
+    "attrs": "variant=\"ghost\" size=\"icon\" className=\"relative\""
+  },
+  {
+    "kind": "Button",
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\settings\\clear-data.tsx",
+    "line": 142,
+    "empty_handler": false,
+    "attrs": "variant=\"destructive\" disabled={isClearing} className=\"w-full\""
+  },
+  {
+    "kind": "Button",
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\settings\\companies-tab.tsx",
+    "line": 497,
+    "empty_handler": false,
+    "attrs": "className=\"bg-red-600 hover:bg-red-700\""
+  },
+  {
+    "kind": "Button",
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\components\\students\\student-card\\exam-dialog.tsx",
+    "line": 294,
+    "empty_handler": false,
+    "attrs": "variant=\"outline\" size=\"sm\" className=\"text-red-600 hover:text-red-700 hover:bg-red-50\""
+  }
+]

@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2021",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": true,
+    "noImplicitAny": true,
+    "strictBindCallApply": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    // Sem `baseUrl` (deprecado no TS 7.0): desde o TS 4.4 os `paths` são
+    // resolvidos relativos a este arquivo, então a forma "./src/*" basta.
+    //
+    // Só `@/*` é usado no código. Os aliases `@common/*`, `@config/*` e
+    // `@modules/*` estavam sem nenhum import. `@prisma/*` foi removido por ser
+    // perigoso: sombreava o pacote real `@prisma/client` — o mapeamento do Jest
+    // precisava de um lookahead negativo justamente para contornar isso.
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}

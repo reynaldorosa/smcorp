@@ -1,0 +1,106 @@
+# ============================================
+# SMCORP Backend - Production Dockerfile
+# Banco de dados EXTERNO (sem PostgreSQL local)
+# ============================================
+
+# ---- Stage 1: Dependencies ----
+FROM node:20-alpine AS deps
+
+WORKDIR /app
+
+# Dependências de sistema para Prisma
+RUN apk add --no-cache openssl libc6-compat
+
+# Copiar apenas arquivos de dependência (melhor cache)
+COPY package.json package-lock.json* ./
+COPY prisma ./prisma/
+
+# Fail-fast: garantir que package.json é JSON válido
+RUN node -e "const fs=require('fs'); JSON.parse(fs.readFileSync('package.json','utf8')); console.log('OK: package.json é JSON válido')"
+
+# Instalar APENAS dependências de produção + devDeps para build
+RUN npm ci --ignore-scripts \
+  && npx prisma generate \
+  && npx tsc prisma/seed.ts --module commonjs --target ES2021 --moduleResolution node --esModuleInterop --skipLibCheck --outDir prisma
+
+# ---- Stage 2: Build ----
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/package.json ./package.json
+COPY --from=deps /app/prisma ./prisma
+
+# Copiar código fonte
+COPY src ./src
+COPY tsconfig.json nest-cli.json ./
+
+# Build da aplicação
+RUN npm run build
+
+# ---- Stage 3: Production ----
+FROM node:20-alpine AS production
+
+# Labels para identificação
+LABEL maintainer="SMCORP Team"
+LABEL description="SMCORP Backend API - Production"
+LABEL version="1.0.0"
+
+WORKDIR /app
+
+# Dependências mínimas de sistema
+RUN apk add --no-cache \
+    openssl \
+    libc6-compat \
+  netcat-openbsd \
+  sed \
+    curl \
+    tini \
+    && addgroup -g 1001 -S nodejs \
+    && adduser -S nestjs -u 1001 -G nodejs
+
+# Copiar package.json para npm ci --production
+COPY package.json package-lock.json* ./
+
+# Fail-fast: garantir que package.json é JSON válido
+RUN node -e "const fs=require('fs'); JSON.parse(fs.readFileSync('package.json','utf8')); console.log('OK: package.json é JSON válido')"
+
+# Garantir modo produção antes da instalação
+ENV NODE_ENV=production
+ENV NPM_CONFIG_PRODUCTION=true
+
+# Instalar APENAS dependências de produção
+RUN npm ci --omit=dev --ignore-scripts --no-audit --no-fund && npm cache clean --force
+
+# Copiar Prisma schema + client gerado
+COPY --from=deps /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=deps /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=deps /app/prisma ./prisma
+
+# Copiar build
+COPY --from=builder /app/dist ./dist
+
+# Copiar entrypoint de produção
+COPY entrypoint.prod.sh ./entrypoint.prod.sh
+RUN chmod +x ./entrypoint.prod.sh
+
+# Variáveis de ambiente padrão
+ENV NODE_ENV=production
+ENV PORT=3001
+
+# Mudar para usuário não-root
+USER nestjs
+
+# Expor porta
+EXPOSE 3001
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD curl -f http://localhost:3001/health || exit 1
+
+# Usar tini como init para gerenciar sinais corretamente
+ENTRYPOINT ["/sbin/tini", "--"]
+
+# Comando de produção via entrypoint
+CMD ["sh", "./entrypoint.prod.sh"]

@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mockup - Operacional</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-50 text-slate-900">
+    <div class="min-h-screen p-6">
+      <header class="mb-4">
+        <h1 class="text-2xl font-bold tracking-tight">Dashboard Operacional</h1>
+        <p class="text-sm text-slate-500">Proposta de layout para melhorar leitura da lista de turmas</p>
+      </header>
+
+      <main class="grid grid-cols-12 gap-4">
+        <!-- Sidebar Turmas -->
+        <aside class="col-span-12 lg:col-span-3">
+          <section class="rounded-xl border bg-white shadow-sm">
+            <div class="border-b px-4 py-3">
+              <h2 class="text-sm font-semibold">Turmas Ativas</h2>
+            </div>
+            <div class="max-h-[74vh] space-y-3 overflow-y-auto p-3">
+
+              <!-- Card 1 -->
+              <article class="rounded-lg border border-slate-200 p-3">
+                <div class="mb-2 flex items-center justify-between gap-2">
+                  <div class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-medium text-blue-700">Planejada</div>
+                  <span class="text-xs font-semibold text-slate-700">NR35-2026-002</span>
+                </div>
+                <p class="line-clamp-2 text-sm font-medium leading-tight">NR-35 Turma B - Março</p>
+                <div class="mt-3 space-y-1 text-xs text-slate-600">
+                  <p>26/02/2026 - 08/03/2026</p>
+                  <p>0/15 alunos</p>
+                </div>
+                <button class="mt-3 w-full rounded-md border bg-white px-3 py-1.5 text-xs font-medium hover:bg-slate-50">Ver Alunos</button>
+              </article>
+
+              <!-- Card 2 -->
+              <article class="rounded-lg border border-slate-200 p-3">
+                <div class="mb-2 flex items-center justify-between gap-2">
+                  <div class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-medium text-blue-700">Planejada</div>
+                  <span class="text-xs font-semibold text-slate-700">SOLD-2026-001</span>
+                </div>
+                <p class="line-clamp-2 text-sm font-medium leading-tight">Soldagem MIG/MAG - Turma 1</p>
+                <div class="mt-3 space-y-1 text-xs text-slate-600">
+                  <p>26/02/2026 - 08/03/2026</p>
+                  <p>0/15 alunos</p>
+                </div>
+                <button class="mt-3 w-full rounded-md border bg-white px-3 py-1.5 text-xs font-medium hover:bg-slate-50">Ver Alunos</button>
+              </article>
+
+              <!-- Card 3 selecionado -->
+              <article class="rounded-lg border border-green-500 bg-green-50/30 p-3">
+                <div class="mb-2 flex items-center justify-between gap-2">
+                  <div class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-medium text-blue-700">Planejada</div>
+                  <span class="text-xs font-semibold text-slate-700">NR35-PET-001</span>
+                </div>
+                <p class="line-clamp-2 text-sm font-medium leading-tight">NR-35 Petrobras - Fechada</p>
+                <div class="mt-3 space-y-1 text-xs text-slate-600">
+                  <p>10/03/2026 - 22/03/2026</p>
+                  <p>12/12 alunos</p>
+                </div>
+                <button class="mt-3 w-full rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800">Ver Alunos</button>
+              </article>
+            </div>
+          </section>
+        </aside>
+
+        <!-- Calendário -->
+        <section class="col-span-12 lg:col-span-6 rounded-xl border bg-white p-4 shadow-sm">
+          <div class="mb-3 flex items-center justify-between">
+            <h2 class="text-sm font-semibold">Agenda Semanal</h2>
+            <div class="flex items-center gap-2 text-xs">
+              <button class="rounded border px-2 py-1 hover:bg-slate-50">Hoje</button>
+              <span class="font-medium text-slate-600">9 de fev. - 15 de fev.</span>
+              <button class="rounded border px-2 py-1 hover:bg-slate-50">Relatório</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-7 gap-2">
+            <div class="rounded-md border p-2 text-center">
+              <p class="text-[11px] uppercase text-slate-500">Seg</p>
+              <p class="text-lg font-bold">9</p>
+            </div>
+            <div class="rounded-md border p-2 text-center">
+              <p class="text-[11px] uppercase text-slate-500">Ter</p>
+              <p class="text-lg font-bold">10</p>
+            </div>
+            <div class="rounded-md border bg-red-50 p-2 text-center ring-1 ring-red-200">
+              <p class="text-[11px] uppercase text-red-600">Qua</p>
+              <p class="text-lg font-bold text-red-700">11</p>
+            </div>
+            <div class="rounded-md border p-2 text-center">
+              <p class="text-[11px] uppercase text-slate-500">Qui</p>
+              <p class="text-lg font-bold">12</p>
+            </div>
+            <div class="rounded-md border p-2 text-center">
+              <p class="text-[11px] uppercase text-slate-500">Sex</p>
+              <p class="text-lg font-bold">13</p>
+            </div>
+            <div class="rounded-md border bg-slate-50 p-2 text-center">
+              <p class="text-[11px] uppercase text-slate-500">Sáb</p>
+              <p class="text-lg font-bold">14</p>
+            </div>
+            <div class="rounded-md border bg-slate-50 p-2 text-center">
+              <p class="text-[11px] uppercase text-slate-500">Dom</p>
+              <p class="text-lg font-bold">15</p>
+            </div>
+          </div>
+
+          <div class="mt-2 grid min-h-[62vh] grid-cols-7 gap-2">
+            <div class="rounded-md border p-2 text-xs text-slate-400 flex items-center justify-center">Sem aulas</div>
+            <div class="rounded-md border p-2 text-xs text-slate-400 flex items-center justify-center">Sem aulas</div>
+
+            <div class="rounded-md border border-blue-600 bg-blue-500 p-2 text-white">
+              <p class="text-[11px] font-bold">NR33-2026-001</p>
+              <p class="mt-1 text-[11px] leading-tight">NR-33 Espaço Confinado</p>
+              <p class="mt-2 text-[11px] opacity-90">8h</p>
+              <p class="text-[11px] opacity-90">0/20</p>
+            </div>
+
+            <div class="rounded-md border border-blue-600 bg-blue-500 p-2 text-white">
+              <p class="text-[11px] font-bold">NR33-2026-001</p>
+              <p class="mt-1 text-[11px] leading-tight">NR-33 Espaço Confinado</p>
+              <p class="mt-2 text-[11px] opacity-90">8h</p>
+              <p class="text-[11px] opacity-90">0/20</p>
+            </div>
+
+            <div class="rounded-md border p-2 text-xs text-slate-400 flex items-center justify-center">Sem aulas</div>
+            <div class="rounded-md border bg-slate-50 p-2 text-xs text-slate-400 flex items-center justify-center">Fim de semana</div>
+            <div class="rounded-md border bg-slate-50 p-2 text-xs text-slate-400 flex items-center justify-center">Fim de semana</div>
+          </div>
+        </section>
+
+        <!-- Painel de detalhes -->
+        <section class="col-span-12 lg:col-span-3 rounded-xl border bg-white p-4 shadow-sm">
+          <h2 class="mb-3 text-sm font-semibold">Detalhes da Turma</h2>
+          <div class="space-y-3 text-sm">
+            <div class="rounded-md bg-slate-50 p-3">
+              <p class="text-xs text-slate-500">Turma</p>
+              <p class="font-medium">NR35-PET-001</p>
+            </div>
+            <div class="rounded-md bg-slate-50 p-3">
+              <p class="text-xs text-slate-500">Curso</p>
+              <p class="font-medium">NR-35 Petrobras - Fechada</p>
+            </div>
+            <div class="rounded-md bg-slate-50 p-3">
+              <p class="text-xs text-slate-500">Alunos</p>
+              <p class="font-medium">12 matriculados</p>
+            </div>
+            <button class="w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700">Abrir Gestão de Alunos</button>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

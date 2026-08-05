@@ -1,0 +1,46 @@
+# ============================================
+# SMCORP - .dockerignore (Raiz)
+# ============================================
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+
+# Documentação
+docs
+docsatuais
+*.md
+
+# Variáveis de ambiente
+.env
+.env.*
+!.env.example
+
+# Figma / Design
+portalsmcorpfigma
+
+# Scripts locais
+scripts
+
+# Node modules (cada serviço instala as suas)
+**/node_modules
+
+# Build outputs locais
+**/dist
+**/build
+**/.next
+**/coverage
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Temporários
+tmp
+temp
+.cache

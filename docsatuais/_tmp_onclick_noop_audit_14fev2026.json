@@ -1,0 +1,14 @@
+[
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\costs\\page.tsx",
+    "line": 975,
+    "kind": "empty_lambda_block",
+    "snippet": "onClick={() => navigateTab('prev')} disabled={activeTab === tabs[0]} className=\"h-8 w-8\" > <ChevronLeft className=\"h-4 w-4\" /> </Button> <Button variant=\"outline\" size=\"icon\" onClick={() => navigateTab('next')} disabled="
+  },
+  {
+    "file": "c:\\Users\\uniqs\\Desktop\\PORTALSMCORP\\frontend\\src\\app\\(dashboard)\\costs\\page.tsx",
+    "line": 1356,
+    "kind": "prop_noop",
+    "snippet": "onToggleSelect={() => {}}"
+  }
+]
