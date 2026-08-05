@@ -63,6 +63,7 @@ import {
 } from '@/stores/crm.store';
 import { useCoursesStore } from '@/stores/courses.store';
 import { useStudentsStore, type Student } from '@/stores/students.store';
+import { useAuthStore } from '@/stores/auth.store';
 import { studentsService } from '@/services/students.service';
 import { companiesService } from '@/services/companies.service';
 import { crmService } from '@/services/crm.service';
@@ -187,6 +188,7 @@ export default function CRMPage() {
   const store = useCRMStore();
   const { courses } = useCoursesStore();
   const { students, setStudents } = useStudentsStore();
+  const currentUser = useAuthStore((s) => s.user);
   const apiFallbackNotifiedRef = useRef(false);
   const [companyNameById, setCompanyNameById] = useState<Record<string, string>>({});
   const [search, setSearch] = useState('');
@@ -352,83 +354,132 @@ export default function CRMPage() {
   }, [store.activities]);
 
   // Handlers
-  const handleCreateContact = () => {
+  // Garante que `contact` tenha um id real no backend do CRM antes de criar
+  // atividades/deals vinculados a ele. Contatos derivados de alunos (id
+  // sintético `student:xxx`) ainda não têm registro em /crm/contacts —
+  // cria um agora, vinculado ao aluno, e substitui a entrada local pela real.
+  const ensureRealContact = async (contact: CRMContact): Promise<CRMContact> => {
+    if (!contact.studentId) return contact; // já é um contato real do CRM
+
+    const created = await crmService.createContact({
+      name: contact.name,
+      email: contact.email,
+      phone: contact.phone,
+      company: contact.company,
+      source: contact.source,
+      status: contact.status,
+      assignedToId: currentUser?.id,
+    });
+
+    const resolved: CRMContact = { ...contact, ...created, studentId: contact.studentId };
+    store.setContacts(store.contacts.map((c) => (c.id === contact.id ? resolved : c)));
+    if (selectedContact?.id === contact.id) setSelectedContact(resolved);
+    return resolved;
+  };
+
+  const handleCreateContact = async () => {
     if (!contactForm.name.trim()) return;
-    const nextNum = store.contacts.length + 1;
-    const newContact: CRMContact = {
-      id: `ct-new-${Date.now()}`,
-      code: `C${String(nextNum).padStart(4, '0')}`,
-      name: contactForm.name,
-      email: contactForm.email || undefined,
-      phone: contactForm.phone || undefined,
-      company: contactForm.company || undefined,
-      notes: contactForm.notes || undefined,
-      source: contactForm.source,
-      status: 'LEAD',
-      tags: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      activitiesCount: 0,
-      dealsCount: 0,
-      dealsValue: 0,
-    };
-    store.addContact(newContact);
-    toast.success(`Contato ${newContact.code} - ${newContact.name} criado!`);
-    setShowContactDialog(false);
-    setContactForm({ name: '', email: '', phone: '', company: '', notes: '', source: 'MANUAL' });
+    try {
+      const created = await crmService.createContact({
+        name: contactForm.name,
+        email: contactForm.email || undefined,
+        phone: contactForm.phone || undefined,
+        company: contactForm.company || undefined,
+        notes: contactForm.notes || undefined,
+        source: contactForm.source,
+        status: 'LEAD',
+        assignedToId: currentUser?.id,
+      });
+      store.addContact({
+        ...created,
+        tags: created.tags ?? [],
+        activitiesCount: created.activitiesCount ?? 0,
+        dealsCount: created.dealsCount ?? 0,
+        dealsValue: created.dealsValue ?? 0,
+      });
+      toast.success(`Contato ${created.code} - ${created.name} criado!`);
+      setShowContactDialog(false);
+      setContactForm({ name: '', email: '', phone: '', company: '', notes: '', source: 'MANUAL' });
+    } catch {
+      toast.error('Falha ao criar contato no servidor');
+    }
   };
 
-  const handleCreateActivity = () => {
-    if (!selectedContact || !activityForm.title.trim()) return;
-    const newActivity: CRMActivity = {
-      id: `act-new-${Date.now()}`,
-      contactId: selectedContact.id,
-      type: activityForm.type,
-      title: activityForm.title,
-      description: activityForm.description || undefined,
-      createdById: 'current-user',
-      createdByName: 'Você',
-      createdAt: new Date().toISOString(),
-    };
-    store.addActivity(newActivity);
-    toast.success('Atividade registrada!');
-    setShowActivityDialog(false);
-    setActivityForm({ type: 'CALL', title: '', description: '' });
+  const handleCreateActivity = async () => {
+    if (!selectedContact || !activityForm.title.trim() || !currentUser?.id) return;
+    try {
+      const contact = await ensureRealContact(selectedContact);
+      const created = await crmService.createActivity({
+        contactId: contact.id,
+        type: activityForm.type,
+        title: activityForm.title,
+        description: activityForm.description || undefined,
+        createdById: currentUser.id,
+      });
+      store.addActivity({ createdByName: currentUser.name, ...created });
+      toast.success('Atividade registrada!');
+      setShowActivityDialog(false);
+      setActivityForm({ type: 'CALL', title: '', description: '' });
+    } catch {
+      toast.error('Falha ao registrar atividade no servidor');
+    }
   };
 
-  const handleCreateDeal = () => {
+  const handleCreateDeal = async () => {
     if (!selectedContact || !dealForm.title.trim()) return;
-    const nextNum = store.deals.length + 1;
-    const stage = store.pipelineStages.find((s) => s.id === dealForm.stageId);
-    const newDeal: CRMDeal = {
-      id: `d-new-${Date.now()}`,
-      code: `D${String(nextNum).padStart(4, '0')}`,
-      contactId: selectedContact.id,
-      stageId: dealForm.stageId,
-      title: dealForm.title,
-      value: parseFloat(dealForm.value) || 0,
-      status: 'OPEN',
-      contactName: selectedContact.name,
-      contactCode: selectedContact.code,
-      stageName: stage?.name || '',
-      stageColor: stage?.color || '#6366f1',
-      createdAt: new Date().toISOString(),
-    };
-    store.addDeal(newDeal);
-    toast.success(`Deal ${newDeal.code} criado!`);
-    setShowDealDialog(false);
-    setDealForm({ title: '', value: '', stageId: 'stage-1' });
+    try {
+      const contact = await ensureRealContact(selectedContact);
+      const stage = store.pipelineStages.find((s) => s.id === dealForm.stageId);
+      const created = await crmService.createDeal({
+        contactId: contact.id,
+        stageId: dealForm.stageId,
+        title: dealForm.title,
+        value: parseFloat(dealForm.value) || 0,
+      });
+      store.addDeal({
+        contactName: contact.name,
+        contactCode: contact.code,
+        stageName: stage?.name || '',
+        stageColor: stage?.color || '#6366f1',
+        ...created,
+      });
+      toast.success(`Deal ${created.code} criado!`);
+      setShowDealDialog(false);
+      setDealForm({ title: '', value: '', stageId: 'stage-1' });
+    } catch {
+      toast.error('Falha ao criar deal no servidor');
+    }
   };
 
-  const handleMoveDeal = (dealId: string, newStageId: string) => {
+  const handleMoveDeal = async (dealId: string, newStageId: string) => {
     const stage = store.pipelineStages.find((s) => s.id === newStageId);
-    store.updateDeal(dealId, { stageId: newStageId, stageName: stage?.name, stageColor: stage?.color });
-    toast.success('Deal movido!');
+    try {
+      const updated = await crmService.moveDeal(dealId, newStageId);
+      store.updateDeal(dealId, {
+        ...updated,
+        stageName: stage?.name ?? updated.stageName,
+        stageColor: stage?.color ?? updated.stageColor,
+      });
+      toast.success('Deal movido!');
+    } catch {
+      toast.error('Falha ao mover deal no servidor');
+    }
   };
 
-  const handleConvertContact = (contact: CRMContact) => {
-    store.updateContact(contact.id, { status: 'ENROLLED', studentId: `student-${Date.now()}` });
-    toast.success(`${contact.name} convertido para aluno!`);
+  const handleConvertContact = async (contact: CRMContact) => {
+    if (contact.studentId) {
+      toast.error('Este contato já corresponde a um aluno matriculado.');
+      return;
+    }
+    try {
+      const result = await crmService.convertToStudent(contact.id);
+      const studentId = (result as { studentId?: string; student?: { id?: string } })?.studentId
+        ?? (result as { studentId?: string; student?: { id?: string } })?.student?.id;
+      store.updateContact(contact.id, { status: 'ENROLLED', studentId });
+      toast.success(`${contact.name} convertido para aluno!`);
+    } catch {
+      toast.error('Falha ao converter contato em aluno no servidor');
+    }
   };
 
   const formatDate = (d?: string) => d ? new Date(d).toLocaleDateString('pt-BR') : '—';
@@ -683,7 +734,7 @@ export default function CRMPage() {
                             <DollarSign className="h-3 w-3 mr-1" />
                             Deal
                           </Button>
-                          {contact.status !== 'ENROLLED' && contact.status !== 'LOST' && (
+                          {contact.status !== 'ENROLLED' && contact.status !== 'LOST' && !contact.studentId && (
                             <Button
                               size="sm"
                               variant="ghost"

@@ -77,7 +77,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.prod
       args:
-        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:?NEXT_PUBLIC_API_URL é obrigatória — sem ela o build embute uma URL vazia em todas as chamadas do browser}
         - NEXT_PUBLIC_APP_NAME=${NEXT_PUBLIC_APP_NAME:-SMCORP}
         - NEXT_BUILD_IGNORE_LINT=${NEXT_BUILD_IGNORE_LINT:-true}
     container_name: smcorp_frontend_prod
