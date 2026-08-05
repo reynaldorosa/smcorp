@@ -36,6 +36,8 @@ import { useCostsStore } from '@/stores/costs.store';
 import { ExamResultDialog } from '@/components/operational/dialogs';
 import { checkDocumentsComplete, createLocalDate } from './utils';
 import type { ExamScheduleData } from './types';
+import { examsService } from '@/services/exams.service';
+import { examOperations } from '@/services/operations.service';
 
 interface ExamDialogProps {
   student: Student;
@@ -419,17 +421,47 @@ export const ExamDialog: React.FC<ExamDialogProps> = ({
             data: student.examStatus?.date || '',
           }}
           usuarioAtual={usuarioAtual}
-          onRegistrarResultado={(_studentId, result, observations) => {
-            const now = new Date();
-            const date = now.toISOString().split('T')[0];
-            const time = now.toTimeString().slice(0, 5);
+          onRegistrarResultado={async (_studentId, result, observations) => {
+            if (!student.enrollmentId) {
+              toast.error('Aluno sem matrícula vinculada — não é possível registrar resultado.');
+              return;
+            }
+
             const mappedStatus =
               result === 'Aprovado' ? 'Approved' :
               result === 'Reprovado' ? 'Failed' : 'NoShow';
+            const passed = result === 'Aprovado';
+            // A UI não coleta nota numérica (o placeholder de Observações já
+            // sugere registrar a nota em texto livre) — deriva um score
+            // compatível com o schema do backend (obrigatório, 0-100).
+            const score = passed ? 100 : 0;
+
+            try {
+              const realExams = await examsService.getByEnrollment(student.enrollmentId);
+              const realExam = realExams.find((item) => item.examNumber === examNumber);
+              if (!realExam) {
+                toast.error('Prova não encontrada no servidor para registrar o resultado.');
+                return;
+              }
+
+              await examOperations.recordResult({
+                examId: realExam.id,
+                score,
+                passed,
+                notes: observations || undefined,
+              });
+            } catch {
+              toast.error('Falha ao registrar resultado da prova no servidor');
+              return;
+            }
+
+            const now = new Date();
+            const date = now.toISOString().split('T')[0];
+            const time = now.toTimeString().slice(0, 5);
 
             onUpdateStudent?.(student.id, {
               examResult: {
-                score: null,
+                score,
                 status: mappedStatus,
                 date,
                 time,

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -19,10 +19,11 @@ import {
   XCircle,
   Clock,
   Eye,
-  Upload,
   AlertCircle,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { documentOperations } from '@/services/operations.service';
 
 // ============================================
 // TYPES
@@ -30,16 +31,14 @@ import { toast } from 'sonner';
 
 export type DocumentStatus = 'Pending' | 'Approved' | 'Rejected';
 
-interface StudentDocument {
+type ApiStudentDocument = {
   id: string;
-  name: string;
-  fileName: string;
-  uploadDate: string;
-  status: DocumentStatus;
-  fileUrl?: string;
-  fileBase64?: string;
-  rejectionReason?: string;
-}
+  documentType: string;
+  fileUrl: string;
+  status: 'PENDING' | 'COMPLETE' | 'REJECTED';
+  uploadedAt?: string;
+  rejectedReason?: string | null;
+};
 
 interface Student {
   id: string;
@@ -47,24 +46,25 @@ interface Student {
   name: string;
 }
 
+interface CurrentUser {
+  id: string;
+}
+
 interface StudentDocumentsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   student: Student;
-  documents: StudentDocument[];
-  onUpdateDocuments: (
-    studentId: string,
-    documents: StudentDocument[],
-    allApproved: boolean
-  ) => void;
+  currentUser?: CurrentUser;
 }
 
 // ============================================
 // HELPERS
 // ============================================
 
-function formatDate(dateString: string): string {
+function formatDate(dateString?: string): string {
+  if (!dateString) return '-';
   const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return '-';
   return date.toLocaleDateString('pt-BR', {
     day: '2-digit',
     month: '2-digit',
@@ -72,6 +72,12 @@ function formatDate(dateString: string): string {
     hour: '2-digit',
     minute: '2-digit',
   });
+}
+
+function toUiStatus(status: ApiStudentDocument['status']): DocumentStatus {
+  if (status === 'COMPLETE') return 'Approved';
+  if (status === 'REJECTED') return 'Rejected';
+  return 'Pending';
 }
 
 // ============================================
@@ -82,17 +88,96 @@ export function StudentDocumentsDialog({
   open,
   onOpenChange,
   student,
-  documents,
-  onUpdateDocuments,
+  currentUser,
 }: StudentDocumentsDialogProps) {
-  const [editedDocuments, setEditedDocuments] = useState<StudentDocument[]>([]);
+  const [documents, setDocuments] = useState<ApiStudentDocument[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [actioningId, setActioningId] = useState<string | null>(null);
   const [viewingDoc, setViewingDoc] = useState<{ name: string; url: string } | null>(null);
+
+  const refreshDocuments = useCallback(async () => {
+    setLoading(true);
+    try {
+      const docs = (await documentOperations.getByStudent(student.id)) as ApiStudentDocument[];
+      setDocuments(Array.isArray(docs) ? docs : []);
+    } catch {
+      toast.error('Falha ao carregar documentos do servidor');
+      setDocuments([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [student.id]);
 
   useEffect(() => {
     if (open) {
-      setEditedDocuments(documents);
+      refreshDocuments();
     }
-  }, [open, documents]);
+  }, [open, refreshDocuments]);
+
+  const approveDocument = async (doc: ApiStudentDocument) => {
+    if (!currentUser?.id) {
+      toast.error('Usuário não autenticado');
+      return;
+    }
+
+    setActioningId(doc.id);
+    try {
+      await documentOperations.validate({ documentId: doc.id, validatorId: currentUser.id });
+      toast.success(`Documento "${doc.documentType}" aprovado!`);
+      await refreshDocuments();
+    } catch {
+      toast.error('Erro ao aprovar documento no servidor');
+    } finally {
+      setActioningId(null);
+    }
+  };
+
+  const rejectDocument = async (doc: ApiStudentDocument) => {
+    if (!currentUser?.id) {
+      toast.error('Usuário não autenticado');
+      return;
+    }
+
+    const reason = window.prompt(
+      `Informe o motivo para rejeitar "${doc.documentType}" (mínimo 10 caracteres):`,
+      'Documento inválido. Reenviar com melhor qualidade ou documento correto.'
+    );
+    if (reason === null) return;
+
+    const normalizedReason = reason.trim();
+    if (normalizedReason.length < 10) {
+      toast.error('Informe um motivo com pelo menos 10 caracteres.');
+      return;
+    }
+
+    setActioningId(doc.id);
+    try {
+      await documentOperations.reject({
+        documentId: doc.id,
+        validatorId: currentUser.id,
+        rejectedReason: normalizedReason,
+      });
+      toast.warning(`Documento "${doc.documentType}" rejeitado.`);
+      await refreshDocuments();
+    } catch {
+      toast.error('Erro ao rejeitar documento no servidor');
+    } finally {
+      setActioningId(null);
+    }
+  };
+
+  const downloadDocument = (doc: ApiStudentDocument) => {
+    try {
+      const link = document.createElement('a');
+      link.href = doc.fileUrl;
+      link.download = `${student.code}_${doc.documentType}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch {
+      toast.error('Falha ao baixar o documento');
+    }
+  };
 
   const getStatusBadge = (status: DocumentStatus) => {
     switch (status) {
@@ -120,52 +205,11 @@ export function StudentDocumentsDialog({
     }
   };
 
-  const updateDocumentStatus = (index: number, newStatus: DocumentStatus) => {
-    const newDocs = [...editedDocuments];
-    newDocs[index] = { ...newDocs[index], status: newStatus };
-    setEditedDocuments(newDocs);
-  };
-
-  const approveAll = () => {
-    const newDocs = editedDocuments.map((doc) => ({ ...doc, status: 'Approved' as const }));
-    setEditedDocuments(newDocs);
-    toast.success('Todos os documentos foram aprovados!');
-  };
-
-  const saveChanges = () => {
-    const allApproved = editedDocuments.every((doc) => doc.status === 'Approved');
-    onUpdateDocuments(student.id, editedDocuments, allApproved);
-    toast.success('Status dos documentos atualizado!');
-    onOpenChange(false);
-  };
-
-  const downloadDocument = (doc: StudentDocument) => {
-    try {
-      const link = document.createElement('a');
-      link.href = doc.fileUrl || doc.fileBase64 || '';
-      link.download = `${student.code}_${doc.name}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast.success(`Baixando ${doc.name}...`);
-    } catch (error) {
-      toast.error('Falha ao baixar o documento');
-    }
-  };
-
-  const viewDocument = (doc: StudentDocument) => {
-    setViewingDoc({
-      name: doc.name,
-      url: doc.fileUrl || doc.fileBase64 || '',
-    });
-  };
-
-  // Statistics
   const stats = {
-    total: editedDocuments.length,
-    approved: editedDocuments.filter((d) => d.status === 'Approved').length,
-    pending: editedDocuments.filter((d) => d.status === 'Pending').length,
-    rejected: editedDocuments.filter((d) => d.status === 'Rejected').length,
+    total: documents.length,
+    approved: documents.filter((d) => d.status === 'COMPLETE').length,
+    pending: documents.filter((d) => d.status === 'PENDING').length,
+    rejected: documents.filter((d) => d.status === 'REJECTED').length,
   };
 
   return (
@@ -205,7 +249,12 @@ export function StudentDocumentsDialog({
           </div>
 
           {/* Documents List */}
-          {editedDocuments.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-12 text-gray-500">
+              <Loader2 className="w-8 h-8 mx-auto mb-3 animate-spin text-gray-300" />
+              <p className="font-medium">Carregando documentos...</p>
+            </div>
+          ) : documents.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <FileText className="w-16 h-16 mx-auto mb-3 text-gray-300" />
               <p className="font-medium">Nenhum documento enviado</p>
@@ -214,102 +263,95 @@ export function StudentDocumentsDialog({
           ) : (
             <ScrollArea className="flex-1 pr-4">
               <div className="space-y-3">
-                {editedDocuments.map((doc, index) => (
-                  <Card key={doc.id || index} className="border-gray-200">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <FileText className="w-4 h-4 text-red-600 flex-shrink-0" />
-                            <span className="font-medium text-gray-900">{doc.name}</span>
-                          </div>
-                          <div className="text-xs text-gray-500 mb-3">
-                            Enviado: {formatDate(doc.uploadDate)}
-                          </div>
+                {documents.map((doc) => {
+                  const status = toUiStatus(doc.status);
+                  const isActioning = actioningId === doc.id;
 
-                          {/* Current Status */}
-                          <div className="mb-3">{getStatusBadge(doc.status)}</div>
-
-                          {/* Rejection Reason */}
-                          {doc.status === 'Rejected' && doc.rejectionReason && (
-                            <div className="p-2 bg-red-50 rounded text-xs text-red-700 mb-3">
-                              <AlertCircle className="w-3 h-3 inline mr-1" />
-                              {doc.rejectionReason}
+                  return (
+                    <Card key={doc.id} className="border-gray-200">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-2">
+                              <FileText className="w-4 h-4 text-red-600 flex-shrink-0" />
+                              <span className="font-medium text-gray-900">{doc.documentType}</span>
                             </div>
-                          )}
+                            <div className="text-xs text-gray-500 mb-3">
+                              Enviado: {formatDate(doc.uploadedAt)}
+                            </div>
 
-                          {/* Actions */}
-                          <div className="flex flex-wrap gap-2">
+                            <div className="mb-3">{getStatusBadge(status)}</div>
+
+                            {status === 'Rejected' && doc.rejectedReason && (
+                              <div className="p-2 bg-red-50 rounded text-xs text-red-700 mb-3">
+                                <AlertCircle className="w-3 h-3 inline mr-1" />
+                                {doc.rejectedReason}
+                              </div>
+                            )}
+
+                            <div className="flex flex-wrap gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setViewingDoc({ name: doc.documentType, url: doc.fileUrl })}
+                                className="flex items-center gap-1"
+                              >
+                                <Eye className="w-3 h-3" />
+                                Visualizar
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => downloadDocument(doc)}
+                                className="flex items-center gap-1"
+                              >
+                                <Download className="w-3 h-3" />
+                                Baixar
+                              </Button>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-2 flex-shrink-0">
                             <Button
                               size="sm"
-                              variant="outline"
-                              onClick={() => viewDocument(doc)}
-                              className="flex items-center gap-1"
+                              disabled={isActioning || status === 'Approved'}
+                              onClick={() => approveDocument(doc)}
+                              className={`${
+                                status === 'Approved'
+                                  ? 'bg-green-600 hover:bg-green-700'
+                                  : 'bg-gray-200 text-gray-700 hover:bg-green-600 hover:text-white'
+                              }`}
                             >
-                              <Eye className="w-3 h-3" />
-                              Visualizar
+                              <CheckCircle2 className="w-4 h-4 mr-1" />
+                              Aprovar
                             </Button>
                             <Button
                               size="sm"
-                              variant="outline"
-                              onClick={() => downloadDocument(doc)}
-                              className="flex items-center gap-1"
+                              disabled={isActioning || status === 'Rejected'}
+                              onClick={() => rejectDocument(doc)}
+                              className={`${
+                                status === 'Rejected'
+                                  ? 'bg-red-600 hover:bg-red-700'
+                                  : 'bg-gray-200 text-gray-700 hover:bg-red-600 hover:text-white'
+                              }`}
                             >
-                              <Download className="w-3 h-3" />
-                              Baixar
+                              <XCircle className="w-4 h-4 mr-1" />
+                              Rejeitar
                             </Button>
                           </div>
                         </div>
-
-                        {/* Approval Buttons */}
-                        <div className="flex flex-col gap-2 flex-shrink-0">
-                          <Button
-                            size="sm"
-                            onClick={() => updateDocumentStatus(index, 'Approved')}
-                            className={`${
-                              doc.status === 'Approved'
-                                ? 'bg-green-600 hover:bg-green-700'
-                                : 'bg-gray-200 text-gray-700 hover:bg-green-600 hover:text-white'
-                            }`}
-                          >
-                            <CheckCircle2 className="w-4 h-4 mr-1" />
-                            Aprovar
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={() => updateDocumentStatus(index, 'Rejected')}
-                            className={`${
-                              doc.status === 'Rejected'
-                                ? 'bg-red-600 hover:bg-red-700'
-                                : 'bg-gray-200 text-gray-700 hover:bg-red-600 hover:text-white'
-                            }`}
-                          >
-                            <XCircle className="w-4 h-4 mr-1" />
-                            Rejeitar
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </ScrollArea>
           )}
 
-          {/* Actions */}
-          <div className="flex justify-between items-center pt-4 border-t">
-            <Button variant="outline" onClick={approveAll} disabled={editedDocuments.length === 0}>
-              <CheckCircle2 className="w-4 h-4 mr-2" />
-              Aprovar Todos
+          <div className="flex justify-end items-center pt-4 border-t">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Fechar
             </Button>
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={saveChanges} className="bg-red-600 hover:bg-red-700">
-                Salvar Alterações
-              </Button>
-            </div>
           </div>
         </DialogContent>
       </Dialog>

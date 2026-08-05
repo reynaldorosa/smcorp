@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import {
   Plus,
   Briefcase,
@@ -99,6 +100,17 @@ function formatPhone(value: string): string {
   if (cleaned.length <= 2) return `(${cleaned}`;
   if (cleaned.length <= 7) return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2)}`;
   return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7, 11)}`;
+}
+
+// A tela de Empresas fica visível para quem tem modulo00 (Configurações),
+// mas o backend exige modulo05 (Área do Cliente PJ) para salvar — ver
+// backend/src/modules/companies/companies.controller.ts. Sem essa checagem,
+// quem tem só modulo00 vê os botões normalmente e recebe um 403 genérico.
+function companyErrorMessage(error: unknown, fallback: string): string {
+  if (axios.isAxiosError(error) && error.response?.status === 403) {
+    return 'Você não tem permissão para gerenciar Empresas (Módulo 05 — Área do Cliente PJ).';
+  }
+  return fallback;
 }
 
 // ============================================
@@ -222,8 +234,8 @@ export function CompaniesTab() {
       setFormData(INITIAL_FORM_DATA);
       setIsAddDialogOpen(false);
       toast.success(`Empresa ${formData.name} cadastrada com sucesso!`);
-    } catch {
-      toast.error('Falha ao cadastrar empresa no servidor');
+    } catch (error) {
+      toast.error(companyErrorMessage(error, 'Falha ao cadastrar empresa no servidor'));
     }
   };
 
@@ -267,8 +279,8 @@ export function CompaniesTab() {
 
       const mapped = applyApiCompany(updated);
       setPricingCompany(mapped);
-    } catch {
-      toast.error('Falha ao salvar precificações no servidor');
+    } catch (error) {
+      toast.error(companyErrorMessage(error, 'Falha ao salvar precificações no servidor'));
     }
   };
 
@@ -385,9 +397,9 @@ export function CompaniesTab() {
       <div className="border-t pt-4 space-y-4">
         <div className="flex items-center gap-2">
           <Shield className="w-4 h-4 text-red-600" />
-          <h3 className="font-semibold text-sm">Acesso à Área do Cliente (Módulo 06)</h3>
+          <h3 className="font-semibold text-sm">Acesso à Área do Cliente (Módulo 05)</h3>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Checkbox
             id="acessoAtivoEmpresa"
@@ -395,7 +407,7 @@ export function CompaniesTab() {
             onCheckedChange={(checked) => setFormData({ ...formData, portalAccess: checked as boolean })}
           />
           <Label htmlFor="acessoAtivoEmpresa" className="text-sm cursor-pointer">
-            Permitir acesso à área do cliente (Módulo 06)
+            Permitir acesso à área do cliente (Módulo 05)
           </Label>
         </div>
 
@@ -426,7 +438,7 @@ export function CompaniesTab() {
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
         <p className="text-xs text-blue-700 mb-2">
-          <strong>💡 Dica:</strong> Empresas com acesso ativo poderão acessar o Módulo 06 para importar alunos e vincular a turmas usando o login e senha criados aqui.
+          <strong>💡 Dica:</strong> Empresas com acesso ativo poderão acessar o Módulo 05 para importar alunos e vincular a turmas usando o login e senha criados aqui.
         </p>
         <p className="text-xs text-blue-700">
           <strong>🎯 Precificações:</strong> Após criar a empresa, clique em &quot;Precificações&quot; para gerenciar os valores negociados por curso.
@@ -660,8 +672,8 @@ export function CompaniesTab() {
             });
 
             applyApiCompany(updated);
-          } catch {
-            toast.error('Falha ao atualizar empresa no servidor');
+          } catch (error) {
+            toast.error(companyErrorMessage(error, 'Falha ao atualizar empresa no servidor'));
           }
         }}
       />

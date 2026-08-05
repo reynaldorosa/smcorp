@@ -47,6 +47,7 @@ import { WhatsAppDialog } from './whatsapp-dialog';
 import { EditStudentDialog } from './edit-student-dialog';
 import { PaymentDialog, type PaymentMethod } from '@/components/dialogs';
 import { StudentDocumentsDialog } from '@/components/dialogs';
+import { paymentsService, type PaymentMethod as ApiPaymentMethod } from '@/services/payments.service';
 
 /**
  * StudentCard - Main student card component
@@ -132,49 +133,6 @@ export const StudentCard: React.FC<StudentCardProps> = ({
       .join(' • ');
   };
 
-  const dialogDocuments = (student.documents || []).map((doc) => ({
-    id: doc.id,
-    name: doc.name,
-    fileName: doc.name,
-    uploadDate: doc.submittedAt,
-    status: doc.status,
-    fileUrl: doc.fileUrl,
-    fileBase64: doc.fileUrl?.startsWith('data:') ? doc.fileUrl : undefined,
-    rejectionReason: doc.rejectionReason,
-  }));
-
-  const handleUpdateDocuments = (
-    studentId: string,
-    updatedDocuments: Array<{
-      id: string;
-      name: string;
-      fileName: string;
-      uploadDate: string;
-      status: 'Pending' | 'Approved' | 'Rejected';
-      fileUrl?: string;
-      fileBase64?: string;
-      rejectionReason?: string;
-    }>,
-    allApproved: boolean
-  ) => {
-    const updatedMap = new Map(updatedDocuments.map((doc) => [doc.id, doc]));
-    const mergedDocuments = (student.documents || []).map((doc) => {
-      const updatedDoc = updatedMap.get(doc.id);
-      if (!updatedDoc) return doc;
-      return {
-        ...doc,
-        status: updatedDoc.status,
-        rejectionReason: updatedDoc.rejectionReason,
-        fileUrl: updatedDoc.fileUrl || updatedDoc.fileBase64 || doc.fileUrl,
-      };
-    });
-
-    onUpdateStudent?.(studentId, {
-      documents: mergedDocuments,
-      documentsComplete: allApproved,
-    });
-  };
-
   // Enrollment link
   const enrollmentLink = buildEnrollmentLink(student);
 
@@ -225,6 +183,26 @@ export const StudentCard: React.FC<StudentCardProps> = ({
         return 'Boleto';
       default:
         return 'PIX';
+    }
+  };
+
+  const toApiPaymentMethod = (method: PaymentMethod): ApiPaymentMethod => {
+    switch (method) {
+      case 'Cash':
+        return 'CASH';
+      case 'PIX':
+        return 'PIX';
+      case 'CreditCard':
+        return 'CREDIT_CARD';
+      case 'DebitCard':
+        return 'DEBIT_CARD';
+      case 'BankTransfer':
+        return 'TRANSFER';
+      case 'Invoice':
+        return 'BOLETO';
+      case 'Check':
+      default:
+        return 'CASH';
     }
   };
 
@@ -285,13 +263,6 @@ export const StudentCard: React.FC<StudentCardProps> = ({
       },
       paymentComplete,
     });
-  };
-
-  const createPaymentId = () => {
-    if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-      return `pay-${crypto.randomUUID()}`;
-    }
-    return `pay-${Date.now()}-${Math.random().toString(16).slice(2)}`;
   };
 
   // Get company name if corporate student
@@ -702,8 +673,7 @@ export const StudentCard: React.FC<StudentCardProps> = ({
           code: student.code,
           name: student.name,
         }}
-        documents={dialogDocuments}
-        onUpdateDocuments={handleUpdateDocuments}
+        currentUser={currentUser ? { id: currentUser.id } : undefined}
       />
 
       {/* Payment Dialog (wired to PaymentButton) */}
@@ -713,59 +683,147 @@ export const StudentCard: React.FC<StudentCardProps> = ({
         student={dialogStudent}
         currentUser={dialogCurrentUser}
         allowedPaymentMethods={allowedPaymentMethods}
-        onRegisterPayment={(data) => {
-          const now = new Date();
-          const date = now.toISOString().split('T')[0];
-          const time = now.toTimeString().slice(0, 5);
+        onRegisterPayment={async (data) => {
+          if (!student.enrollmentId) {
+            toast.error('Aluno sem matrícula vinculada — não é possível registrar pagamento.');
+            return;
+          }
 
-          const newHistory = [
-            ...(student.payments?.history || []),
-            {
-              id: createPaymentId(),
+          try {
+            const created = await paymentsService.create({
+              enrollmentId: student.enrollmentId,
               amount: data.amount,
-              date,
-              time,
-              paymentMethod: fromDialogPaymentMethod(data.method),
-              notes: data.observations || undefined,
-              recordedBy: currentUser?.name || 'Usuário',
-              boletoBarcode: data.invoiceCode,
-              boletoDueDate: data.invoiceDueDate,
-            },
-          ];
+              dueDate: new Date().toISOString(),
+              method: toApiPaymentMethod(data.method),
+              description: data.observations || `Pagamento - ${student.name}`,
+            });
 
-          upsertPayments(newHistory);
+            const newHistory = [
+              ...(student.payments?.history || []),
+              {
+                id: created.id,
+                amount: data.amount,
+                date: created.createdAt.split('T')[0],
+                time: created.createdAt.split('T')[1]?.slice(0, 5) || '12:00',
+                paymentMethod: fromDialogPaymentMethod(data.method),
+                notes: data.observations || undefined,
+                recordedBy: currentUser?.name || 'Usuário',
+                boletoBarcode: data.invoiceCode,
+                boletoDueDate: data.invoiceDueDate,
+                invoiceNumber: data.invoiceCode,
+              },
+            ];
+
+            upsertPayments(newHistory);
+          } catch {
+            toast.error('Falha ao registrar pagamento no servidor');
+          }
         }}
-        onConfirmPayment={(paymentId) => {
-          const now = new Date();
-          const confirmationDate = now.toISOString().split('T')[0];
-          const confirmationTime = now.toTimeString().slice(0, 5);
+        onConfirmPayment={async (paymentId) => {
+          const record = (student.payments?.history || []).find((p) => p.id === paymentId);
+          if (!record) {
+            toast.error('Pagamento não encontrado.');
+            return;
+          }
 
-          const newHistory = (student.payments?.history || []).map((p) =>
-            p.id === paymentId
-              ? {
-                  ...p,
-                  confirmedBy: currentUser?.name || 'Master',
-                  confirmationDate,
-                  confirmationTime,
-                }
-              : p
-          );
+          try {
+            await paymentsService.recordPayment({
+              paymentId,
+              method: toApiPaymentMethod(toDialogPaymentMethod(record.paymentMethod)),
+              invoiceNumber: record.invoiceNumber || record.boletoBarcode,
+              notes: record.notes,
+            });
 
-          upsertPayments(newHistory);
+            const now = new Date();
+            const confirmationDate = now.toISOString().split('T')[0];
+            const confirmationTime = now.toTimeString().slice(0, 5);
+
+            const newHistory = (student.payments?.history || []).map((p) =>
+              p.id === paymentId
+                ? {
+                    ...p,
+                    confirmedBy: currentUser?.name || 'Master',
+                    confirmationDate,
+                    confirmationTime,
+                  }
+                : p
+            );
+
+            upsertPayments(newHistory);
+          } catch {
+            toast.error('Falha ao confirmar pagamento no servidor');
+          }
         }}
-        onEditPayment={(paymentId, data) => {
-          const newHistory = (student.payments?.history || []).map((p) =>
-            p.id === paymentId
-              ? {
-                  ...p,
+        onEditPayment={async (paymentId, data) => {
+          const existing = (student.payments?.history || []).find((p) => p.id === paymentId);
+          if (!existing) {
+            toast.error('Pagamento não encontrado.');
+            return;
+          }
+
+          const amountOrMethodChanged =
+            existing.amount !== data.amount ||
+            fromDialogPaymentMethod(data.method) !== existing.paymentMethod;
+
+          if (!amountOrMethodChanged) {
+            // Só dados de boleto (código/vencimento) mudaram — não existe
+            // endpoint de edição no backend para isso; fica só guardado
+            // localmente e vai junto no invoiceNumber quando confirmar
+            // (onConfirmPayment lê record.invoiceNumber/boletoBarcode).
+            const newHistory = (student.payments?.history || []).map((p) =>
+              p.id === paymentId
+                ? {
+                    ...p,
+                    boletoBarcode: data.invoiceCode,
+                    boletoDueDate: data.invoiceDueDate,
+                    invoiceNumber: data.invoiceCode,
+                    notes: data.observations || undefined,
+                  }
+                : p
+            );
+            upsertPayments(newHistory);
+            return;
+          }
+
+          if (!student.enrollmentId) {
+            toast.error('Aluno sem matrícula vinculada — não é possível editar pagamento.');
+            return;
+          }
+
+          // Não existe endpoint para editar valor/método de um pagamento já
+          // criado (payments.controller.ts só tem record/updateStatus) —
+          // remove o pendente antigo e cria um novo com os dados corrigidos.
+          try {
+            await paymentsService.delete(paymentId);
+            const created = await paymentsService.create({
+              enrollmentId: student.enrollmentId,
+              amount: data.amount,
+              dueDate: new Date().toISOString(),
+              method: toApiPaymentMethod(data.method),
+              description: data.observations || `Pagamento - ${student.name}`,
+            });
+
+            const newHistory = (student.payments?.history || [])
+              .filter((p) => p.id !== paymentId)
+              .concat([
+                {
+                  id: created.id,
                   amount: data.amount,
+                  date: created.createdAt.split('T')[0],
+                  time: created.createdAt.split('T')[1]?.slice(0, 5) || '12:00',
                   paymentMethod: fromDialogPaymentMethod(data.method),
                   notes: data.observations || undefined,
-                }
-              : p
-          );
+                  recordedBy: currentUser?.name || 'Usuário',
+                  boletoBarcode: data.invoiceCode,
+                  boletoDueDate: data.invoiceDueDate,
+                  invoiceNumber: data.invoiceCode,
+                },
+              ]);
 
-          upsertPayments(newHistory);
+            upsertPayments(newHistory);
+          } catch {
+            toast.error('Falha ao atualizar pagamento no servidor');
+          }
         }}
       />
     </div>

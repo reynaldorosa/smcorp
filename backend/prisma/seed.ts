@@ -43,7 +43,8 @@ prisma.$use(async (params, next) => {
     (params.action === 'create' || params.action === 'createMany' || params.action === 'upsert')
   ) {
     const isMasterUser =
-      params.model === 'User' && (params.args?.data?.role === 'MASTER' || params.args?.create?.role === 'MASTER');
+      params.model === 'User' &&
+      (params.args?.data?.role === 'MASTER' || params.args?.create?.role === 'MASTER');
 
     if (!isMasterUser) {
       if (params.action === 'createMany') {
@@ -151,7 +152,10 @@ async function main() {
   console.log('👤 Creating users...');
   const isProduction = process.env.NODE_ENV === 'production';
 
-  if (isProduction && (!process.env.ADMIN_PASSWORD || !process.env.MASTER_PASSWORD || !process.env.MASTER_PIN)) {
+  if (
+    isProduction &&
+    (!process.env.ADMIN_PASSWORD || !process.env.MASTER_PASSWORD || !process.env.MASTER_PIN)
+  ) {
     // Fail-fast: em produção, credenciais iniciais do MASTER/ADMIN e o PIN que
     // autoriza pagamentos nunca podem cair nos defaults fracos de dev
     // ('Admin@123' / '123456') — mesma lógica do EncryptionService.
@@ -171,7 +175,7 @@ async function main() {
   const hashedMasterPassword = await bcrypt.hash(masterPassword, 12);
   const hashedMasterPin = await bcrypt.hash(masterPin, 12);
   const hashedAdminPassword = await bcrypt.hash(adminPassword, 12);
-  
+
   const users = await Promise.all([
     prisma.user.create({
       data: {
@@ -344,8 +348,8 @@ async function main() {
             },
           },
         },
-      })
-    )
+      }),
+    ),
   );
   console.log(`   ✅ Created ${companySettings.length} company settings`);
 
@@ -360,7 +364,7 @@ async function main() {
         code: 'SALA-01',
         block: 'A',
         capacity: 25,
-        costPerDay: 500.00,
+        costPerDay: 500.0,
         location: 'Bloco A - Térreo',
         hasAC: true,
         hasProjector: true,
@@ -373,7 +377,7 @@ async function main() {
         code: 'SALA-02',
         block: 'A',
         capacity: 30,
-        costPerDay: 600.00,
+        costPerDay: 600.0,
         location: 'Bloco A - 1º Andar',
         hasAC: true,
         hasProjector: true,
@@ -386,7 +390,7 @@ async function main() {
         code: 'LAB-01',
         block: 'B',
         capacity: 20,
-        costPerDay: 800.00,
+        costPerDay: 800.0,
         location: 'Bloco B - Térreo',
         hasAC: true,
         hasProjector: false,
@@ -399,7 +403,7 @@ async function main() {
         code: 'CAMPO-01',
         block: 'C',
         capacity: 50,
-        costPerDay: 1500.00,
+        costPerDay: 1500.0,
         location: 'Área Externa',
         hasAC: false,
         hasProjector: false,
@@ -412,7 +416,7 @@ async function main() {
         code: 'AUD-01',
         block: 'A',
         capacity: 100,
-        costPerDay: 2000.00,
+        costPerDay: 2000.0,
         location: 'Bloco A - 2º Andar',
         hasAC: true,
         hasProjector: true,
@@ -434,8 +438,8 @@ async function main() {
         email: 'carlos.silva@smcorp.com.br',
         phone: '(21) 98765-4321',
         specialties: ['NR-35', 'Trabalho em Altura', 'Resgate'],
-        classHourlyRate: 150.00,
-        examHourlyRate: 200.00,
+        classHourlyRate: 150.0,
+        examHourlyRate: 200.0,
         isActive: true,
       },
     }),
@@ -446,8 +450,8 @@ async function main() {
         email: 'maria.santos@smcorp.com.br',
         phone: '(21) 98765-4322',
         specialties: ['Acesso por Corda', 'IRATA', 'Resgate Vertical'],
-        classHourlyRate: 180.00,
-        examHourlyRate: 250.00,
+        classHourlyRate: 180.0,
+        examHourlyRate: 250.0,
         isActive: true,
       },
     }),
@@ -458,8 +462,8 @@ async function main() {
         email: 'joao.oliveira@smcorp.com.br',
         phone: '(21) 98765-4323',
         specialties: ['Soldagem', 'NR-34', 'Trabalho a Quente'],
-        classHourlyRate: 140.00,
-        examHourlyRate: 180.00,
+        classHourlyRate: 140.0,
+        examHourlyRate: 180.0,
         isActive: true,
       },
     }),
@@ -470,8 +474,8 @@ async function main() {
         email: 'ana.lima@smcorp.com.br',
         phone: '(21) 98765-4324',
         specialties: ['Pintura Industrial', 'Jateamento', 'Tratamento de Superfície'],
-        classHourlyRate: 130.00,
-        examHourlyRate: 170.00,
+        classHourlyRate: 130.0,
+        examHourlyRate: 170.0,
         isActive: true,
       },
     }),
@@ -482,8 +486,8 @@ async function main() {
         email: 'roberto.machado@smcorp.com.br',
         phone: '(21) 98765-4325',
         specialties: ['Espaço Confinado', 'NR-33', 'Atmosferas IPVS'],
-        classHourlyRate: 160.00,
-        examHourlyRate: 220.00,
+        classHourlyRate: 160.0,
+        examHourlyRate: 220.0,
         isActive: true,
       },
     }),
@@ -518,7 +522,7 @@ async function main() {
         learningTime: 8,
         certificationInfo: 'Certificado válido por 2 anos conforme NR-35',
         prerequisites: ['Maior de 18 anos', 'ASO apto para trabalho em altura'],
-        price: 350.00,
+        price: 350.0,
         validityMonths: 24,
         isOffshore: true,
         isActive: true,
@@ -546,7 +550,7 @@ async function main() {
         learningTime: 40,
         certificationInfo: 'Certificação IRATA Nível 1 - válida por 3 anos',
         prerequisites: ['NR-35 válido', 'Aptidão física', 'Maior de 18 anos'],
-        price: 2500.00,
+        price: 2500.0,
         validityMonths: 36,
         isOffshore: true,
         isActive: true,
@@ -575,7 +579,7 @@ async function main() {
         learningTime: 80,
         certificationInfo: 'Certificado FBTS válido por 5 anos',
         prerequisites: ['Ensino fundamental completo'],
-        price: 1800.00,
+        price: 1800.0,
         validityMonths: 60,
         isOffshore: false,
         isActive: true,
@@ -603,7 +607,7 @@ async function main() {
         learningTime: 40,
         certificationInfo: 'Certificado válido por 3 anos',
         prerequisites: [],
-        price: 1200.00,
+        price: 1200.0,
         validityMonths: 36,
         isOffshore: false,
         isActive: true,
@@ -631,7 +635,7 @@ async function main() {
         learningTime: 16,
         certificationInfo: 'Certificado válido por 1 ano conforme NR-33',
         prerequisites: ['Maior de 18 anos'],
-        price: 550.00,
+        price: 550.0,
         validityMonths: 12,
         isOffshore: true,
         isActive: true,
@@ -641,7 +645,8 @@ async function main() {
       data: {
         name: 'NR-34 - Trabalho a Quente',
         code: 'NR34-B',
-        description: 'Condições e meio ambiente de trabalho na indústria da construção e reparação naval',
+        description:
+          'Condições e meio ambiente de trabalho na indústria da construção e reparação naval',
         syllabus: `1. Aplicação da NR-34
 2. Trabalho a quente
 3. Trabalho em altura (naval)
@@ -658,7 +663,7 @@ async function main() {
         learningTime: 8,
         certificationInfo: 'Certificado válido por 2 anos',
         prerequisites: [],
-        price: 400.00,
+        price: 400.0,
         validityMonths: 24,
         isOffshore: true,
         isActive: true,
@@ -677,7 +682,7 @@ async function main() {
       data: {
         category: CostCategory.FIXED,
         description: 'Aluguel do Prédio Principal',
-        amount: 15000.00,
+        amount: 15000.0,
         period: now,
         isRecurring: true,
         isAuditable: false,
@@ -687,7 +692,7 @@ async function main() {
       data: {
         category: CostCategory.FIXED,
         description: 'Energia Elétrica',
-        amount: 3500.00,
+        amount: 3500.0,
         period: now,
         isRecurring: true,
         isAuditable: false,
@@ -697,7 +702,7 @@ async function main() {
       data: {
         category: CostCategory.PERSONNEL,
         description: 'Folha de Pagamento - Administrativo',
-        amount: 25000.00,
+        amount: 25000.0,
         period: now,
         isRecurring: true,
         isAuditable: false,
@@ -707,7 +712,7 @@ async function main() {
       data: {
         category: CostCategory.MATERIAL,
         description: 'Material Didático - NR-35',
-        amount: 50.00,
+        amount: 50.0,
         period: now,
         isRecurring: false,
         isAuditable: true,
@@ -718,7 +723,7 @@ async function main() {
       data: {
         category: CostCategory.MATERIAL,
         description: 'Material de Soldagem - Consumíveis',
-        amount: 200.00,
+        amount: 200.0,
         period: now,
         isRecurring: false,
         isAuditable: true,
@@ -729,7 +734,7 @@ async function main() {
       data: {
         category: CostCategory.EQUIPMENT,
         description: 'Manutenção Equipamentos de Altura',
-        amount: 2500.00,
+        amount: 2500.0,
         period: now,
         isRecurring: true,
         isAuditable: true,
@@ -740,7 +745,7 @@ async function main() {
       data: {
         category: CostCategory.INFRASTRUCTURE,
         description: 'Manutenção Campo de Treinamento',
-        amount: 5000.00,
+        amount: 5000.0,
         period: now,
         isRecurring: true,
         isAuditable: false,
@@ -750,7 +755,7 @@ async function main() {
       data: {
         category: CostCategory.SERVICES,
         description: 'Certificadora Externa',
-        amount: 30.00,
+        amount: 30.0,
         period: now,
         isRecurring: false,
         isAuditable: true,
@@ -766,23 +771,23 @@ async function main() {
   console.log('🔗 Linking courses to costs...');
   const auditableCosts = costs.filter((c) => c.isAuditable);
   const courseCosts = [];
-  
+
   // NR-35 usa material didático e certificadora
   courseCosts.push(
     prisma.courseCost.create({ data: { courseId: courses[0].id, costId: auditableCosts[0].id } }),
-    prisma.courseCost.create({ data: { courseId: courses[0].id, costId: auditableCosts[3].id } })
+    prisma.courseCost.create({ data: { courseId: courses[0].id, costId: auditableCosts[3].id } }),
   );
-  
+
   // Soldagem usa material de consumíveis e manutenção
   courseCosts.push(
     prisma.courseCost.create({ data: { courseId: courses[2].id, costId: auditableCosts[1].id } }),
-    prisma.courseCost.create({ data: { courseId: courses[2].id, costId: auditableCosts[2].id } })
+    prisma.courseCost.create({ data: { courseId: courses[2].id, costId: auditableCosts[2].id } }),
   );
-  
+
   // Acesso por Corda usa manutenção de equipamentos
   courseCosts.push(
     prisma.courseCost.create({ data: { courseId: courses[1].id, costId: auditableCosts[2].id } }),
-    prisma.courseCost.create({ data: { courseId: courses[1].id, costId: auditableCosts[3].id } })
+    prisma.courseCost.create({ data: { courseId: courses[1].id, costId: auditableCosts[3].id } }),
   );
 
   await Promise.all(courseCosts);
@@ -852,7 +857,7 @@ async function main() {
       data: {
         name: 'Cinto de Segurança Paraquedista',
         description: 'Cinto paraquedista 5 pontos para trabalho em altura',
-        price: 450.00,
+        price: 450.0,
         stock: 50,
         isActive: true,
       },
@@ -861,7 +866,7 @@ async function main() {
       data: {
         name: 'Capacete de Segurança com Jugular',
         description: 'Capacete classe B com jugular e slots para acessórios',
-        price: 120.00,
+        price: 120.0,
         stock: 100,
         isActive: true,
       },
@@ -870,7 +875,7 @@ async function main() {
       data: {
         name: 'Óculos de Proteção Ampla Visão',
         description: 'Óculos ampla visão antiembaçante e anti-risco',
-        price: 45.00,
+        price: 45.0,
         stock: 200,
         isActive: true,
       },
@@ -879,7 +884,7 @@ async function main() {
       data: {
         name: 'Luvas de Couro Vaqueta',
         description: 'Luvas de couro vaqueta para soldagem e trabalhos pesados',
-        price: 35.00,
+        price: 35.0,
         stock: 150,
         isActive: true,
       },
@@ -888,7 +893,7 @@ async function main() {
       data: {
         name: 'Máscara de Solda Automática',
         description: 'Máscara de solda com escurecimento automático DIN 9-13',
-        price: 280.00,
+        price: 280.0,
         stock: 30,
         isActive: true,
       },
@@ -897,7 +902,7 @@ async function main() {
       data: {
         name: 'Apostila NR-35 Completa',
         description: 'Material didático completo do curso NR-35',
-        price: 25.00,
+        price: 25.0,
         stock: 500,
         isActive: true,
       },
@@ -906,7 +911,7 @@ async function main() {
       data: {
         name: 'Kit EPI Básico',
         description: 'Kit com capacete, óculos, luvas e protetor auricular',
-        price: 180.00,
+        price: 180.0,
         stock: 80,
         isActive: true,
       },
@@ -915,7 +920,7 @@ async function main() {
       data: {
         name: 'Talabarte Duplo Y',
         description: 'Talabarte Y com absorvedor de energia e ganchos dupla trava',
-        price: 320.00,
+        price: 320.0,
         stock: 40,
         isActive: true,
       },
@@ -924,7 +929,7 @@ async function main() {
       data: {
         name: 'Trava-Quedas Retrátil 3m',
         description: 'Trava-quedas retrátil com cabo de aço de 3 metros',
-        price: 850.00,
+        price: 850.0,
         stock: 20,
         isActive: true,
       },
@@ -933,7 +938,7 @@ async function main() {
       data: {
         name: 'Detector de Gases 4 em 1',
         description: 'Detector portátil O2, LEL, CO, H2S',
-        price: 2500.00,
+        price: 2500.0,
         stock: 10,
         isActive: true,
       },
@@ -1014,16 +1019,36 @@ async function main() {
   // ============================================
   console.log('🎓 Creating students...');
   const studentNames = [
-    'Pedro Henrique Almeida', 'Fernanda Costa Silva', 'Lucas Rodrigues Santos',
-    'Juliana Martins Pereira', 'Rafael Oliveira Lima', 'Camila Souza Ferreira',
-    'Bruno Carvalho Gomes', 'Amanda Ribeiro Dias', 'Thiago Nascimento Castro',
-    'Larissa Mendes Barbosa', 'Gabriel Santos Rocha', 'Beatriz Lima Cardoso',
-    'Matheus Fernandes Cruz', 'Carolina Alves Nunes', 'Diego Pereira Monteiro',
-    'Mariana Costa Araújo', 'Leonardo Silva Teixeira', 'Isabela Gomes Correia',
-    'Felipe Rodrigues Moraes', 'Natália Martins Lopes', 'Gustavo Almeida Pinto',
-    'Aline Souza Mendes', 'Ricardo Carvalho Dias', 'Vanessa Oliveira Costa',
-    'André Santos Vieira', 'Patrícia Lima Ferreira', 'Marcelo Ribeiro Silva',
-    'Daniela Nascimento Rocha', 'Eduardo Fernandes Gomes', 'Cristiane Alves Barbosa',
+    'Pedro Henrique Almeida',
+    'Fernanda Costa Silva',
+    'Lucas Rodrigues Santos',
+    'Juliana Martins Pereira',
+    'Rafael Oliveira Lima',
+    'Camila Souza Ferreira',
+    'Bruno Carvalho Gomes',
+    'Amanda Ribeiro Dias',
+    'Thiago Nascimento Castro',
+    'Larissa Mendes Barbosa',
+    'Gabriel Santos Rocha',
+    'Beatriz Lima Cardoso',
+    'Matheus Fernandes Cruz',
+    'Carolina Alves Nunes',
+    'Diego Pereira Monteiro',
+    'Mariana Costa Araújo',
+    'Leonardo Silva Teixeira',
+    'Isabela Gomes Correia',
+    'Felipe Rodrigues Moraes',
+    'Natália Martins Lopes',
+    'Gustavo Almeida Pinto',
+    'Aline Souza Mendes',
+    'Ricardo Carvalho Dias',
+    'Vanessa Oliveira Costa',
+    'André Santos Vieira',
+    'Patrícia Lima Ferreira',
+    'Marcelo Ribeiro Silva',
+    'Daniela Nascimento Rocha',
+    'Eduardo Fernandes Gomes',
+    'Cristiane Alves Barbosa',
   ];
 
   const students = await Promise.all(
@@ -1033,7 +1058,11 @@ async function main() {
           code: generateStudentCode(index + 1),
           name,
           cpf: randomCPF(),
-          email: `${name.toLowerCase().replace(/ /g, '.').normalize('NFD').replace(/[\u0300-\u036f]/g, '')}@example.com`,
+          email: `${name
+            .toLowerCase()
+            .replace(/ /g, '.')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')}@example.com`,
           phone: randomPhone(),
           birthDate: randomDate(new Date(1980, 0, 1), new Date(2000, 11, 31)),
           companyId: companies[index % companies.length].id,
@@ -1043,8 +1072,8 @@ async function main() {
           zipCode: `${20000 + index * 100}-000`,
           isActive: true,
         },
-      })
-    )
+      }),
+    ),
   );
   console.log(`   ✅ Created ${students.length} students`);
 
@@ -1162,7 +1191,7 @@ async function main() {
         roomId: rooms[1].id,
         instructorId: instructors[0].id,
         companyId: companies[0].id,
-        customPrice: 300.00,
+        customPrice: 300.0,
         startDate: twoWeeks,
         endDate: twoWeeks,
         startTime: '08:00',
@@ -1195,7 +1224,7 @@ async function main() {
           enrolledAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
           confirmedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
         },
-      })
+      }),
     );
   }
 
@@ -1214,7 +1243,7 @@ async function main() {
           confirmedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
           attendedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
         },
-      })
+      }),
     );
   }
 
@@ -1230,11 +1259,11 @@ async function main() {
           enrollmentToken: generateToken(),
           tokenExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
           documentsStatus: i < 4 ? DocumentStatus.COMPLETE : DocumentStatus.PENDING,
-          discount: hasDiscount ? 50.00 : 0,
+          discount: hasDiscount ? 50.0 : 0,
           discountApprovedBy: hasDiscount ? users[0].id : null,
           discountApprovedAt: hasDiscount ? new Date() : null,
         },
-      })
+      }),
     );
   }
 
@@ -1250,7 +1279,7 @@ async function main() {
           tokenExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
           documentsStatus: DocumentStatus.PENDING,
         },
-      })
+      }),
     );
   }
 
@@ -1458,7 +1487,7 @@ async function main() {
             validatedBy: isValidated ? users[2].id : null,
             validatedAt: isValidated ? new Date() : null,
           },
-        })
+        }),
       );
     }
   }
@@ -1492,7 +1521,7 @@ async function main() {
           score: 70 + Math.floor(Math.random() * 30),
           passed: true,
         },
-      })
+      }),
     );
   }
 
@@ -1513,7 +1542,7 @@ async function main() {
           duration: 45,
           status: ExamStatus.SCHEDULED,
         },
-      })
+      }),
     );
   }
 
@@ -1536,14 +1565,14 @@ async function main() {
           description: `Matrícula - ${courses[0].name}`,
           type: PaymentType.INCOME,
           category: PaymentCategory.COURSE_FEE,
-          amount: 350.00,
+          amount: 350.0,
           dueDate: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
           paidAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
           status: PaymentStatus.PAID,
           paymentMethod: ['PIX', 'Cartão de Crédito', 'Boleto'][Math.floor(Math.random() * 3)],
           invoiceNumber: `NF-2026-${String(payments.length + 1).padStart(6, '0')}`,
         },
-      })
+      }),
     );
   }
 
@@ -1557,11 +1586,11 @@ async function main() {
           description: `Matrícula - ${courses[4].name}`,
           type: PaymentType.INCOME,
           category: PaymentCategory.COURSE_FEE,
-          amount: 550.00,
+          amount: 550.0,
           dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
           status: PaymentStatus.PENDING,
         },
-      })
+      }),
     );
   }
 
@@ -1573,7 +1602,7 @@ async function main() {
         description: 'Aluguel - Fevereiro 2026',
         type: PaymentType.EXPENSE,
         category: PaymentCategory.RENT,
-        amount: 15000.00,
+        amount: 15000.0,
         dueDate: new Date(2026, 1, 10),
         status: PaymentStatus.PENDING,
       },
@@ -1584,7 +1613,7 @@ async function main() {
         description: 'Energia Elétrica - Janeiro 2026',
         type: PaymentType.EXPENSE,
         category: PaymentCategory.UTILITIES,
-        amount: 3500.00,
+        amount: 3500.0,
         dueDate: new Date(2026, 1, 5),
         paidAt: new Date(2026, 1, 3),
         status: PaymentStatus.PAID,
@@ -1597,11 +1626,11 @@ async function main() {
         description: 'Manutenção Equipamentos',
         type: PaymentType.EXPENSE,
         category: PaymentCategory.MAINTENANCE,
-        amount: 2500.00,
+        amount: 2500.0,
         dueDate: new Date(2026, 1, 20),
         status: PaymentStatus.PENDING,
       },
-    })
+    }),
   );
 
   await Promise.all(payments);
@@ -1617,11 +1646,11 @@ async function main() {
   for (let i = 0; i < 10; i++) {
     const enrollment = createdEnrollments[i];
     const numProducts = 1 + Math.floor(Math.random() * 3);
-    
+
     for (let j = 0; j < numProducts; j++) {
       const product = products[j % products.length];
       const quantity = 1 + Math.floor(Math.random() * 2);
-      
+
       enrollmentProducts.push(
         prisma.enrollmentExtraProduct.create({
           data: {
@@ -1631,7 +1660,7 @@ async function main() {
             unitPrice: product.price,
             totalPrice: product.price.toNumber() * quantity,
           },
-        })
+        }),
       );
     }
   }

@@ -21,10 +21,10 @@ services:
     environment:
       NODE_ENV: production
       # --- Banco de Dados Externo ---
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL é obrigatória em produção}
       # --- JWT ---
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET é obrigatória em produção}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET é obrigatória em produção}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
       JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
       # --- Criptografia (OBRIGATÓRIO em produção) ---
@@ -32,8 +32,8 @@ services:
       ENCRYPTION_SALT: ${ENCRYPTION_SALT:?ENCRYPTION_SALT é obrigatória em produção}
       # --- App ---
       PORT: 3001
-      CORS_ORIGIN: ${CORS_ORIGIN}
-      APP_URL: ${APP_URL:-https://smcorp.com.br}
+      CORS_ORIGIN: ${CORS_ORIGIN:?CORS_ORIGIN é obrigatória em produção}
+      APP_URL: ${APP_URL:?APP_URL é obrigatória em produção — usada em links de certificado/matrícula}
       INSTITUTION_NAME: ${INSTITUTION_NAME:-SMCORP}
       # --- Mercado Pago (billing SaaS + PIX) ---
       MERCADO_PAGO_ACCESS_TOKEN: ${MERCADO_PAGO_ACCESS_TOKEN:-}
