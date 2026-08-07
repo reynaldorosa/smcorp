@@ -50,6 +50,12 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       MASTER_EMAIL: ${MASTER_EMAIL:-master@smcorp.com.br}
       MASTER_PASSWORD: ${MASTER_PASSWORD}
+    ports:
+      # Só em localhost: o proxy reverso do painel (fora do Docker) acessa
+      # via 127.0.0.1; ninguém de fora bate direto na porta pulando o HTTPS.
+      # Porta do HOST em ${BACKEND_HOST_PORT:-4001} (não 3001: já ocupada
+      # por outro app no mesmo servidor) — a porta do container continua 3001.
+      - "127.0.0.1:${BACKEND_HOST_PORT:-4001}:3001"
     expose:
       - "3001"
     networks:
@@ -84,6 +90,10 @@ services:
     restart: always
     env_file:
       - .env.prod
+    ports:
+      # Porta do HOST em ${FRONTEND_HOST_PORT:-4000} pelo mesmo motivo do
+      # backend acima — a porta do container continua 3000.
+      - "127.0.0.1:${FRONTEND_HOST_PORT:-4000}:3000"
     expose:
       - "3000"
     depends_on:

@@ -420,6 +420,10 @@ model ClassInstructor {
   tenant      Tenant?                @relation(fields: [tenantId], references: [id])
   attendances InstructorAttendance[]
 
+  // Partial (deletedAt IS NULL) — criada via SQL bruto na migration
+  // 20260807140000_schema_hardening_safe pois Prisma não representa
+  // unique parcial no DSL. Sem isso o mesmo instrutor podia ser vinculado
+  // à mesma turma mais de uma vez (achado do database_schema_review).
   @@index([classId])
   @@index([instructorId])
   @@index([tenantId])
@@ -445,6 +449,7 @@ model InstructorAttendance {
 
   @@unique([classInstructorId, date])
   @@index([tenantId])
+  @@index([confirmedBy])
   @@index([deletedAt])
   @@map("instructor_attendances")
 }
@@ -503,6 +508,7 @@ model Enrollment {
   @@index([tenantId])
   @@index([enrollmentToken])
   @@index([documentsStatus])
+  @@index([discountApprovedBy])
   @@index([deletedAt])
   @@map("enrollments")
 }
@@ -1055,6 +1061,8 @@ model Certificate {
   @@index([tenantId])
   @@index([status])
   @@index([issuedAt])
+  @@index([issuedById])
+  @@index([templateId])
   @@index([deletedAt])
   @@map("certificates")
 }
@@ -1228,6 +1236,7 @@ model CRMDeal {
   @@index([stageId])
   @@index([status])
   @@index([courseId])
+  @@index([classId])
   @@index([tenantId])
   @@index([expectedCloseDate])
   @@index([deletedAt])
