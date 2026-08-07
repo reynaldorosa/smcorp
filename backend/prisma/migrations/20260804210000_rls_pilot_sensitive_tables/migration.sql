@@ -17,26 +17,37 @@
 -- precisar de FORCE. Fora dessa transação (99% do código), o app continua
 -- conectado como `smcorp` — comportamento idêntico ao de antes desta
 -- migration, zero risco de regressão no que não foi migrado.
+--
+-- PRÉ-REQUISITO (rodar antes desta migration, uma vez, manualmente):
+-- backend/prisma/manual/2026-08-04_create_smcorp_rls_role.sql
+-- CREATE ROLE e GRANT USAGE ON SCHEMA exigem CREATEROLE (ou dono do
+-- schema) — privilégio que `smcorp` não tem no Postgres compartilhado.
+-- Esta migration só faz o que o DONO DAS TABELAS já pode fazer sem
+-- privilégio extra: GRANT nas 3 tabelas, ENABLE RLS, CREATE POLICY.
+-- (Falhou em produção em 2026-08-07 com "permission denied to create
+-- role" antes desse split — ver P3009 / _prisma_migrations.logs.)
 -- ============================================
 
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'smcorp_rls') THEN
-    CREATE ROLE smcorp_rls NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT;
+    RAISE EXCEPTION 'Role smcorp_rls não existe. Rode primeiro backend/prisma/manual/2026-08-04_create_smcorp_rls_role.sql com um usuário que tenha CREATEROLE (ver comentário no topo desta migration).';
   END IF;
 END
 $$;
 
-GRANT USAGE ON SCHEMA public TO smcorp_rls;
 GRANT SELECT, INSERT, UPDATE, DELETE ON "students", "student_documents", "payments" TO smcorp_rls;
-
--- Permite ao role de runtime (smcorp) fazer `SET LOCAL ROLE smcorp_rls`
--- dentro de uma transação.
-GRANT smcorp_rls TO smcorp;
 
 ALTER TABLE "students" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "student_documents" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "payments" ENABLE ROW LEVEL SECURITY;
+
+-- Idempotente: se um retry anterior já criou a policy (ex: transação que
+-- falhou depois deste ponto em uma versão futura), evita erro "already
+-- exists" numa nova tentativa.
+DROP POLICY IF EXISTS tenant_isolation ON "students";
+DROP POLICY IF EXISTS tenant_isolation ON "student_documents";
+DROP POLICY IF EXISTS tenant_isolation ON "payments";
 
 -- USING: filtra linhas visíveis em SELECT/UPDATE/DELETE.
 -- WITH CHECK: valida linhas em INSERT/UPDATE (não deixa gravar noutro tenant).
