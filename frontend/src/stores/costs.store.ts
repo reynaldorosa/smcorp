@@ -549,9 +549,26 @@ export const useCostsStore = create<CostsState>()(
           entryCounter: renumberedEntries.length + 1,
         });
 
-        renumberedEntries.forEach((entry) => {
-          persistUpdateEntry(entry.id, { code: entry.code });
-        });
+        // Dois updates em paralelo podem tentar gravar o mesmo `code` que
+        // outra linha ainda não trocou (a unique é (tenant_id, code)) —
+        // ex: A vira "CE0001" mas B, que ainda está "CE0001", só troca pra
+        // "CE0002" na mesma leva; se a request de A rodar antes da de B
+        // terminar, colide. Renumera em duas fases: primeiro todo mundo
+        // recebe um código temporário único (baseado no id, não colide com
+        // nada), só depois grava os códigos finais — nessa segunda fase
+        // nenhum código atual no banco bate mais com um código-alvo.
+        void (async () => {
+          await Promise.all(
+            renumberedEntries.map((entry) =>
+              costsService.updateEntry(entry.id, { code: `TMP-${entry.id}` }).catch(() => undefined)
+            )
+          );
+          await Promise.all(
+            renumberedEntries.map((entry) =>
+              costsService.updateEntry(entry.id, { code: entry.code }).catch(() => undefined)
+            )
+          );
+        })();
       },
 
       verifyExamCostsForDeletion: ({
