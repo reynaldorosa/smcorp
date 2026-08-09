@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { TenantContextService } from './tenant-context.service';
@@ -19,6 +19,8 @@ import { TenantContextService } from './tenant-context.service';
  */
 @Injectable()
 export class TenantRlsService {
+  private readonly logger = new Logger(TenantRlsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly tenantContext: TenantContextService,
@@ -39,15 +41,25 @@ export class TenantRlsService {
         'withTenantRls exige tenantId no contexto — não use em fluxo de plataforma/público.',
       );
     }
-    return this.prisma.$transaction(
-      async (tx) => {
-        await tx.$executeRaw`SET LOCAL SESSION AUTHORIZATION smcorp_rls`;
-        await tx.$executeRaw`SELECT set_config('app.tenant_id', ${tenantId}, true)`;
-        return fn(tx);
-      },
-      // Timeout acima do default (5s/2s): operações que antes rodavam sem
-      // transação não podem começar a estourar por causa do wrapper RLS.
-      { timeout: 15_000, maxWait: 5_000 },
-    );
+    try {
+      return await this.prisma.$transaction(
+        async (tx) => {
+          await tx.$executeRaw`SET LOCAL SESSION AUTHORIZATION smcorp_rls`;
+          await tx.$executeRaw`SELECT set_config('app.tenant_id', ${tenantId}, true)`;
+          return fn(tx);
+        },
+        // Timeout acima do default (5s/2s): operações que antes rodavam sem
+        // transação não podem começar a estourar por causa do wrapper RLS.
+        { timeout: 15_000, maxWait: 5_000 },
+      );
+    } catch (error) {
+      // Sem este log, uma falha do RLS (ex.: role/GRANT ausente no banco)
+      // vira um 500 genérico invisível nos logs de produção.
+      this.logger.error(
+        `RLS falhou para o tenant ${tenantId}: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+      throw error;
+    }
   }
 }

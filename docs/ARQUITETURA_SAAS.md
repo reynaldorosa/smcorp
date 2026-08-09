@@ -176,3 +176,18 @@ Recomendação: `StorageService` em **dual-mode** —
 4. Rotação da chave `MESSAGING_API_KEY` antes de produção (aparece em logs/env
    local) e mover segredos para secret manager.
 5. `no-explicit-any` (65 warnings) — técnico, aceito (warn por design).
+
+## 10. Observabilidade (logs)
+
+- **Filtro global de exceções** (`common/filters/all-exceptions.filter.ts`, APP_FILTER):
+  - 5xx → `Logger.error` com **stack completo + tenantId + rota + userId** (antes os
+    erros de produção eram invisíveis: o Nest respondia 500 sem logar a causa).
+  - 4xx → `Logger.warn` curto (sem stack, sem ruído).
+- **RLS**: falhas do `TenantRlsService` são logadas com o tenantId (ex.: role/GRANT
+  ausente vira um erro visível, não um 500 mudo).
+- **Health**: `GET /health` (básico) e `GET /health/db` (verifica o banco).
+- **Comandos no servidor** (raiz do deploy):
+  - `./deploy/logs.sh backend --follow` — backend em tempo real
+  - `./deploy/logs.sh frontend` — últimas 200 linhas do frontend
+  - `./deploy/logs.sh all --follow` — tudo
+  - Equivalente manual: `docker compose -f docker-compose.prod.yml --env-file .env.prod logs -f --tail 200 backend`

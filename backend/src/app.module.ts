@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
@@ -29,6 +29,7 @@ import { MercadoPagoModule } from './modules/mercadopago/mercadopago.module';
 import { BillingModule } from './modules/billing/billing.module';
 import { CommunicationModule } from './modules/communication/communication.module';
 import { AuditService } from './common/services/audit.service';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 import { TenantContextModule } from './common/services/tenant-context.module';
 import { TenantInterceptor } from './common/interceptors/tenant.interceptor';
@@ -104,6 +105,12 @@ import { TenantInterceptor } from './common/interceptors/tenant.interceptor';
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditInterceptor,
+    },
+    // Loga a causa raiz de TODAS as exceções (5xx com stack + tenantId/rota;
+    // 4xx como warn) — sem isso, erros de produção ficam invisíveis nos logs.
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
     },
   ],
 })
