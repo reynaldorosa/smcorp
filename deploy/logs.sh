@@ -28,4 +28,10 @@ if [ -n "$COMPOSE_SVC" ]; then
 fi
 
 echo "▶ $ ${CMD[*]}"
-"${CMD[@]}"
+# Filtra o ruído de boot ("Mapped {/api/..., MÉTODO} route") que polui os logs
+# e esconde os erros reais. Use --full para ver tudo.
+if [ "$FOLLOW" = "--full" ] || [ "$SERVICE" = "--full" ]; then
+  "${CMD[@]}"
+else
+  "${CMD[@]}" 2>&1 | grep -vE "Mapped \{|RoutesResolver|RouterExplorer"
+fi
