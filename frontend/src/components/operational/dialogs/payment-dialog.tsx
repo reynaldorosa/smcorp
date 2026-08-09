@@ -275,7 +275,7 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({
                          RECIBO DE PAGAMENTO
 ═══════════════════════════════════════════════════════════════════
 
-A SMCORP declara que o(a) aluno(a):
+A Caiso declara que o(a) aluno(a):
 
   ${aluno.nome.toUpperCase()}
   CPF: ${aluno.taxId}
@@ -306,7 +306,7 @@ DADOS DO BOLETO:
 ` : ''}
 
 ═══════════════════════════════════════════════════════════════════
-                 SMCORP - Centro de Treinamento Profissionalizante
+                 Caiso - Centro de Treinamento Profissionalizante
                    Recibo gerado em ${new Date().toLocaleDateString('pt-BR')}
 ═══════════════════════════════════════════════════════════════════
     `.trim();

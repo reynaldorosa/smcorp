@@ -105,7 +105,11 @@ export class StudentsController {
   @Roles('ADMIN', 'COLLABORATOR')
   @UseGuards(PermissionsGuard)
   @RequireModule('modulo03')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 5 * 1024 * 1024 }, // 5MB — evita base64 gigante no Postgres
+    }),
+  )
   async uploadPhoto(@Param('id') id: string, @UploadedFile() file: any) {
     // In production, upload to S3/CloudStorage. For now, store as base64 data URL.
     const base64 = file.buffer.toString('base64');
@@ -121,7 +125,11 @@ export class StudentsController {
   @Roles('ADMIN', 'COLLABORATOR')
   @UseGuards(PermissionsGuard)
   @RequireModule('modulo03')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 10 * 1024 * 1024 }, // 10MB — mesmo teto do upload público
+    }),
+  )
   async uploadDocument(
     @Param('id') id: string,
     @UploadedFile() file: any,

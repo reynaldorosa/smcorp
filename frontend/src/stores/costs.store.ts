@@ -6,7 +6,7 @@ import { useSettingsStore } from '@/stores/settings.store';
 import { costsService } from '@/services/costs.service';
 
 // ============================================
-// SMCORP - Costs Store (Module 08)
+// Caiso - Costs Store (Module 08)
 // Cost Management and Financial
 // ============================================
 
@@ -166,7 +166,8 @@ interface CostsState {
     examNumber?: string;
   }) => void;
   cleanupOrphanCostEntries: () => number;
-  renumberCostEntries: () => void;
+  renumbering: boolean;
+  renumberCostEntries: () => Promise<boolean>;
   verifyExamCostsForDeletion: (params: {
     studentId: string;
     instructorId: string;
@@ -231,6 +232,7 @@ const initialState = {
   costCounter: 1,
   criterionCounter: 1,
   entryCounter: 1,
+  renumbering: false,
 };
 
 function toIsoDate(date?: string): string | undefined {
@@ -537,38 +539,55 @@ export const useCostsStore = create<CostsState>()(
         return removedCount;
       },
 
-      renumberCostEntries: () => {
-        const { costEntries } = get();
-        const renumberedEntries = costEntries.map((entry, index) => ({
-          ...entry,
-          code: `CE${String(index + 1).padStart(4, '0')}`,
-        }));
+      renumberCostEntries: async () => {
+        // Trava contra clique duplo: duas execuções concorrentes intercalando
+        // as próprias fases 1/2 uma da outra colidiriam do mesmo jeito que o
+        // bug original (achado do audit via MCP Reasoner, 2026-08-07).
+        if (get().renumbering) return false;
+        set({ renumbering: true });
 
-        set({
-          costEntries: renumberedEntries,
-          entryCounter: renumberedEntries.length + 1,
-        });
+        try {
+          const { costEntries } = get();
+          const renumberedEntries = costEntries.map((entry, index) => ({
+            ...entry,
+            code: `CE${String(index + 1).padStart(4, '0')}`,
+          }));
 
-        // Dois updates em paralelo podem tentar gravar o mesmo `code` que
-        // outra linha ainda não trocou (a unique é (tenant_id, code)) —
-        // ex: A vira "CE0001" mas B, que ainda está "CE0001", só troca pra
-        // "CE0002" na mesma leva; se a request de A rodar antes da de B
-        // terminar, colide. Renumera em duas fases: primeiro todo mundo
-        // recebe um código temporário único (baseado no id, não colide com
-        // nada), só depois grava os códigos finais — nessa segunda fase
-        // nenhum código atual no banco bate mais com um código-alvo.
-        void (async () => {
+          set({
+            costEntries: renumberedEntries,
+            entryCounter: renumberedEntries.length + 1,
+          });
+
+          // Dois updates em paralelo podem tentar gravar o mesmo `code` que
+          // outra linha ainda não trocou (a unique é (tenant_id, code)) —
+          // ex: A vira "CE0001" mas B, que ainda está "CE0001", só troca pra
+          // "CE0002" na mesma leva; se a request de A rodar antes da de B
+          // terminar, colide. Renumera em duas fases: primeiro todo mundo
+          // recebe um código temporário único (baseado no id, não colide com
+          // nada), só depois grava os códigos finais.
+          //
+          // SEM .catch() aqui de propósito: se qualquer update da fase 1
+          // falhar, o Promise.all rejeita e a fase 2 (que assumiria que
+          // TODAS as linhas já estão com código temporário) nunca roda —
+          // rodar mesmo assim reabriria a mesma corrida que este fix existe
+          // pra fechar (achado do audit: o .catch(() => undefined) anterior
+          // engolia a falha da fase 1 e deixava a fase 2 colidir de novo).
           await Promise.all(
             renumberedEntries.map((entry) =>
-              costsService.updateEntry(entry.id, { code: `TMP-${entry.id}` }).catch(() => undefined)
+              costsService.updateEntry(entry.id, { code: `TMP-${entry.id}` })
             )
           );
           await Promise.all(
             renumberedEntries.map((entry) =>
-              costsService.updateEntry(entry.id, { code: entry.code }).catch(() => undefined)
+              costsService.updateEntry(entry.id, { code: entry.code })
             )
           );
-        })();
+          return true;
+        } catch {
+          return false;
+        } finally {
+          set({ renumbering: false });
+        }
       },
 
       verifyExamCostsForDeletion: ({

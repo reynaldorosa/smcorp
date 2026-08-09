@@ -236,7 +236,7 @@ export function CommunicationsTab() {
                 id="fromName"
                 value={emailData.fromName}
                 onChange={(e) => setEmailData({ ...emailData, fromName: e.target.value })}
-                placeholder="SMCORP Treinamentos"
+                placeholder="Caiso Treinamentos"
               />
             </div>
           </div>

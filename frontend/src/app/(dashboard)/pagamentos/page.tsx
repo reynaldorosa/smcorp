@@ -616,7 +616,7 @@ export default function PaymentsPage() {
       receiptNumber: receipt.receiptNumber,
       issueDate: new Date(receipt.generatedAt),
       company: {
-        name: institutionalData?.name || 'SMCORP Treinamentos',
+        name: institutionalData?.name || 'Caiso Treinamentos',
         companyTaxId: institutionalData?.companyTaxId || 'N/A',
         address: institutionalData?.address || 'Endereco nao informado',
         phone: institutionalData?.phone || 'N/A',

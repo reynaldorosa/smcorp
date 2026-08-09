@@ -123,7 +123,7 @@ export default function PortalClientePJLoginPage() {
               </a>
               <span className="text-gray-300">•</span>
               <a href="/dashboard" className="text-gray-500 hover:text-red-600">
-                Voltar ao Sistema SMCORP
+                Voltar ao Sistema Caiso
               </a>
             </div>
           </div>

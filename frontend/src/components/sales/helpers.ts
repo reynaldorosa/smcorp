@@ -1,5 +1,5 @@
 // ============================================
-// SMCORP - Sales Module Helpers (Módulo 04)
+// Caiso - Sales Module Helpers (Módulo 04)
 // ============================================
 
 import type { Contact } from './types';

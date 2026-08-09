@@ -1,5 +1,5 @@
 // ============================================
-// SMCORP - Sales Module Types (Módulo 04)
+// Caiso - Sales Module Types (Módulo 04)
 // ============================================
 
 export interface Message {

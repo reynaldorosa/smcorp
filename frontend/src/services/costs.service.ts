@@ -1,7 +1,7 @@
 import { api } from '@/lib/api';
 
 // ============================================
-// SMCORP - Costs Service (Módulo Custos)
+// Caiso - Costs Service (Módulo Custos)
 // ============================================
 
 export type CostCategory = 

@@ -1,5 +1,5 @@
 // ============================================
-// SMCORP - Unified Types Index
+// Caiso - Unified Types Index
 // ============================================
 // 
 // ⚠️ THIS IS THE SINGLE SOURCE OF TRUTH FOR ALL TYPES

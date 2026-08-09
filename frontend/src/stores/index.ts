@@ -1,5 +1,5 @@
 // ============================================
-// SMCORP - Stores Index
+// Caiso - Stores Index
 // Exporta todas as stores Zustand do projeto
 // ============================================
 

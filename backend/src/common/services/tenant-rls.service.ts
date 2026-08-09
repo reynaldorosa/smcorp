@@ -25,8 +25,12 @@ export class TenantRlsService {
   ) {}
 
   /**
-   * Roda fn dentro de uma transação com RLS armado (SET LOCAL ROLE
-   * smcorp_rls + app.tenant_id). Exige tenantId no contexto.
+   * Roda fn dentro de uma transação com RLS armado (SET LOCAL SESSION
+   * AUTHORIZATION smcorp_rls + app.tenant_id). Exige tenantId no contexto.
+   *
+   * SESSION AUTHORIZATION (e não apenas SET ROLE): muda o session_user,
+   * então um RESET ROLE dentro do callback não consegue voltar para o role
+   * dono (`smcorp`) e desativar o RLS no meio da transação.
    */
   async withTenantRls<T>(fn: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
     const { tenantId } = this.tenantContext.get();
@@ -35,10 +39,15 @@ export class TenantRlsService {
         'withTenantRls exige tenantId no contexto — não use em fluxo de plataforma/público.',
       );
     }
-    return this.prisma.$transaction(async (tx) => {
-      await tx.$executeRawUnsafe('SET LOCAL ROLE smcorp_rls');
-      await tx.$executeRaw`SELECT set_config('app.tenant_id', ${tenantId}, true)`;
-      return fn(tx);
-    });
+    return this.prisma.$transaction(
+      async (tx) => {
+        await tx.$executeRaw`SET LOCAL SESSION AUTHORIZATION smcorp_rls`;
+        await tx.$executeRaw`SELECT set_config('app.tenant_id', ${tenantId}, true)`;
+        return fn(tx);
+      },
+      // Timeout acima do default (5s/2s): operações que antes rodavam sem
+      // transação não podem começar a estourar por causa do wrapper RLS.
+      { timeout: 15_000, maxWait: 5_000 },
+    );
   }
 }

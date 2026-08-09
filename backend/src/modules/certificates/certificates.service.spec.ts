@@ -28,7 +28,7 @@ describe('CertificatesService', () => {
   const mockIssuedCert = {
     id: 'cert-1',
     code: 'CERT0001',
-    certificateNumber: 'SMCORP-2026-00001',
+    certificateNumber: 'CAISO-2026-00001',
     status: 'ISSUED',
     issuedAt: new Date('2026-08-01'),
     expiresAt: new Date('2027-08-01'),
@@ -82,13 +82,13 @@ describe('CertificatesService', () => {
       expect(result).toBeInstanceOf(Buffer);
       expect(mockCertificatePdf.generate).toHaveBeenCalledWith(
         expect.objectContaining({
-          certificateNumber: 'SMCORP-2026-00001',
+          certificateNumber: 'CAISO-2026-00001',
           validityMonths: 12,
           student: { name: 'Aluno Teste', cpf: '12345678909' },
           course: { name: 'Curso Teste', code: 'CT1', durationHours: 40 },
           issuedBy: { name: 'Emissor Teste' },
         }),
-        expect.stringContaining('verificar-certificado?numero=SMCORP-2026-00001'),
+        expect.stringContaining('verificar-certificado?numero=CAISO-2026-00001'),
       );
     });
 

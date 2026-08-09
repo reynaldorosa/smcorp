@@ -1,5 +1,5 @@
 // ============================================
-// SMCORP - Components Index
+// Caiso - Components Index
 // Main exports for all components
 // ============================================
 

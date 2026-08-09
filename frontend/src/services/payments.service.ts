@@ -1,7 +1,7 @@
 import { api } from '@/lib/api';
 
 // ============================================
-// SMCORP - Payments Service (Módulo Pagamentos)
+// Caiso - Payments Service (Módulo Pagamentos)
 // Backend: /payments
 // ============================================
 

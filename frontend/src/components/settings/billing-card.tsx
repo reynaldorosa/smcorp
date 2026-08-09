@@ -126,7 +126,7 @@ export function BillingCard() {
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-medium">{sub?.planName || 'Plano SMCORP'}</p>
+            <p className="font-medium">{sub?.planName || 'Plano Caiso'}</p>
             <p className="text-sm text-gray-500">
               {sub ? formatCurrency(Number(sub.price)) : 'Sem assinatura ativa'}
             </p>

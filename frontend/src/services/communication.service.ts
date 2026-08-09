@@ -1,7 +1,7 @@
 import { api } from '@/lib/api';
 
 // ============================================
-// SMCORP - Communication Service
+// Caiso - Communication Service
 // Status real dos provedores (backend Fase 3)
 // ============================================
 

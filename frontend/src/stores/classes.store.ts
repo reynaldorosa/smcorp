@@ -3,7 +3,7 @@ import { useCostsStore } from './costs.store';
 import { useExamsStore } from './exams.store';
 
 // ============================================
-// SMCORP - Classes Store (Módulo 02)
+// Caiso - Classes Store (Módulo 02)
 // ============================================
 
 export type ClassStatus = 'Planned' | 'Confirmed' | 'InProgress' | 'Completed' | 'Cancelled';

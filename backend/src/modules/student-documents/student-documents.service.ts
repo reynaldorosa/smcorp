@@ -50,7 +50,7 @@ export class StudentDocumentsService {
       .map((d) => `• ${d}`)
       .join(
         '\n',
-      )}\n\nPor favor, acesse seu link de matrícula e envie os documentos faltantes.\n\nAtenciosamente,\nEquipe SMCORP`;
+      )}\n\nPor favor, acesse seu link de matrícula e envie os documentos faltantes.\n\nAtenciosamente,\nEquipe Caiso`;
   }
 
   private async ensureStudentInCompanyScope(studentId: string, companyScopeId?: string) {

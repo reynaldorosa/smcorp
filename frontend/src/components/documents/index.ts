@@ -1,5 +1,5 @@
 // ============================================
-// SMCORP - Documents Components
+// Caiso - Documents Components
 // M06 - Document Management
 // ============================================
 

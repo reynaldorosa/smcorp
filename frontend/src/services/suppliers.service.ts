@@ -1,7 +1,7 @@
 import { api } from '@/lib/api';
 
 // ============================================
-// SMCORP - Suppliers Service (Módulo 00 - Settings)
+// Caiso - Suppliers Service (Módulo 00 - Settings)
 // ============================================
 
 export interface Supplier {

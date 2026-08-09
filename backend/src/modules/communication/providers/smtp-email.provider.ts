@@ -39,8 +39,8 @@ export class SmtpEmailProvider {
       ...(smtp.user ? { auth: { user: smtp.user, pass: smtp.password || '' } } : {}),
     });
 
-    const fromName = smtp.fromName || 'SMCORP';
-    const fromEmail = smtp.from || 'noreply@smcorp.com.br';
+    const fromName = smtp.fromName || 'Caiso';
+    const fromEmail = smtp.from || 'noreply@caiso.com.br';
 
     try {
       const info = await transporter.sendMail({

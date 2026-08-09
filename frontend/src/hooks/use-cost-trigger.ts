@@ -1,5 +1,5 @@
 // ============================================
-// SMCORP - Cost Trigger Hook (alinhado ao costs.store)
+// Caiso - Cost Trigger Hook (alinhado ao costs.store)
 // ============================================
 
 import { useCallback } from 'react';

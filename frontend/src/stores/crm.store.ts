@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 // ============================================
-// SMCORP - CRM Store (Módulo CRM)
+// Caiso - CRM Store (Módulo CRM)
 // ============================================
 
 export type CRMContactSource = 'MANUAL' | 'IMPORT' | 'WEBSITE' | 'WHATSAPP' | 'REFERRAL' | 'COMPANY';

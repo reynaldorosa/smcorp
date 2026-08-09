@@ -9,7 +9,7 @@ import type {
 } from '@/stores/crm.store';
 
 // ============================================
-// SMCORP - CRM Service
+// Caiso - CRM Service
 // ============================================
 
 export interface CreateContactDTO {

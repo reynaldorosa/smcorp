@@ -2,7 +2,7 @@ import { api } from '@/lib/api';
 import type { Instructor } from '@/stores/instructors.store';
 
 // ============================================
-// SMCORP - Instructors Service (Módulo 07)
+// Caiso - Instructors Service (Módulo 07)
 // ============================================
 
 export interface CreateInstructorDTO {

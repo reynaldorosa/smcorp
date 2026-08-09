@@ -813,7 +813,7 @@ export default function CertificadosPage() {
                   <Input
                     value={verifyNumber}
                     onChange={(e) => setVerifyNumber(e.target.value)}
-                    placeholder="Ex: SMCORP-2026-00001"
+                    placeholder="Ex: Caiso-2026-00001"
                     className="font-mono"
                   />
                   <Button onClick={handleVerify} disabled={!verifyNumber.trim()}>

@@ -8,7 +8,7 @@ import { StoreGuard } from '@/components/common';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'SMCORP - Sistema de Gestão de Treinamentos',
+  title: 'Caiso - Sistema de Gestão de Treinamentos',
   description: 'Plataforma de gerenciamento de treinamentos offshore',
 };
 

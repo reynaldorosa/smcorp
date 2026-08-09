@@ -1,7 +1,7 @@
 import { api } from '@/lib/api';
 
 // ============================================
-// SMCORP - Tenants Service (SaaS: billing)
+// Caiso - Tenants Service (SaaS: billing)
 // ============================================
 
 export interface TenantInfo {

@@ -1,4 +1,4 @@
-# ARQUITETURA — SMCORP SaaS Multi-tenant
+# ARQUITETURA — CAISO SaaS Multi-tenant
 
 > Estado: Fases 0–3 + F1.6 + plataforma superadmin implementadas.
 > Última atualização: 2026-08-04
@@ -6,7 +6,7 @@
 ## 1. Visão geral
 
 Sistema de gestão de treinamentos offshore transformado em **SaaS multi-tenant**:
-cada centro de treinamento é um **tenant** isolado. O SMCORP é **mais um tenant**
+cada centro de treinamento é um **tenant** isolado. O SMCORP (slug `smcorp`) é **mais um tenant**
 (slug `smcorp`, id fixo `00000000-0000-4000-8000-000000000001`) — não há código
 especial para ele.
 
@@ -48,6 +48,39 @@ especial para ele.
   boas-vindas (fire-and-forget).
 - `POST /tenant` (MASTER): mesmo provisionamento pela plataforma, sem auto-login.
 - Núcleo compartilhado: `TenantsService.provisionTenantCore()`.
+
+### 2.4 Segunda camada — RLS do Postgres (piloto em 3 tabelas)
+
+Além do middleware Prisma (camada de aplicação), `students`, `student_documents`
+e `payments` (PII + dados financeiros) têm **Row-Level Security** como camada
+independente no banco:
+
+- **Desenho**: o app conecta como DONO das tabelas (`smcorp`), e dono ignora RLS
+  por padrão. Por isso o RLS é armado por um role auxiliar **`smcorp_rls`**
+  (NOLOGIN, sem privilégio de dono) usado via `SET LOCAL SESSION AUTHORIZATION`
+  **dentro de transação explícita** (`TenantRlsService.withTenantRls`). RLS já se
+  aplica a role não-dono sem `FORCE`. `SESSION AUTHORIZATION` (e não `SET ROLE`)
+  impede `RESET ROLE` de reverter para o dono no meio da transação.
+- **Policy** `tenant_isolation`: `tenant_id = current_setting('app.tenant_id', true)`
+  em USING + WITH CHECK — fail-closed (NULL nunca casa).
+- **Uso**: os 3 services do piloto (`StudentsService`, `StudentDocumentsService`,
+  `PaymentsService`) rodam via helper `runTenantScoped`: com tenantId no contexto
+  → transação RLS; sem tenantId (MASTER/plataforma/jobs) → Prisma direto,
+  comportamento atual preservado. `findMany`+`count` compartilham o MESMO client
+  transacional. Transação com timeout 15s (acima do default 5s).
+- **Pré-requisito de ambiente** (UMA vez, com usuário CREATEROLE — o app `smcorp`
+  não pode criar roles):
+  `backend/prisma/manual/2026-08-04_create_smcorp_rls_role.sql` (cria `smcorp_rls`,
+  `GRANT smcorp_rls TO smcorp`, `GRANT USAGE ON SCHEMA public`).
+  A migration `20260804210000_rls_pilot_sensitive_tables` aplica o resto (GRANTs
+  nas tabelas, ENABLE RLS, policies — idempotente) e **falha propositalmente**
+  (RAISE) se o role não existir. Foi o que causou o P3009 em produção em
+  2026-08-07: primeiro faltava CREATEROLE; depois o registro failed precisou de
+  `migrate resolve --rolled-back` (ou `UPDATE _prisma_migrations SET
+  rolled_back_at=now()`).
+- **Evolução planejada** (quando todos os fluxos sensíveis estiverem no wrapper):
+  `FORCE ROW LEVEL SECURITY` nas 3 tabelas + role `BYPASSRLS` para fluxos de
+  plataforma, eliminando o "opt-in" do piloto.
 
 ## 3. Plataforma superadmin (MASTER)
 

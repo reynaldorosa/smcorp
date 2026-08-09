@@ -59,7 +59,7 @@ function mapApiStudentToStoreStudent(apiStudent: ApiStudent): Student {
 }
 
 // ============================================
-// SMCORP - Students Service (Módulo 03)
+// Caiso - Students Service (Módulo 03)
 // ============================================
 
 export interface CreateStudentDTO {

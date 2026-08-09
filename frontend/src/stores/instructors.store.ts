@@ -1,5 +1,5 @@
 // ============================================
-// SMCORP - Instructors Types (Módulo 07)
+// Caiso - Instructors Types (Módulo 07)
 // ============================================
 // NOTA: O store Zustand foi removido pois nunca era consumido
 // por nenhum componente. Os dados de instrutores são buscados

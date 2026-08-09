@@ -4,7 +4,7 @@ import { useCostsStore, type CostTriggerAction } from '@/stores/costs.store';
 import { useExamsStore } from '@/stores/exams.store';
 
 // ============================================
-// SMCORP - Students Store (Módulo 03)
+// Caiso - Students Store (Módulo 03)
 // ============================================
 
 export type StudentStatus = 'Active' | 'Inactive' | 'Pending' | 'WaitingList' | 'Replaced';

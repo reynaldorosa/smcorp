@@ -48,8 +48,10 @@ export class StudentsService {
       return 'A0001';
     }
 
-    // Extrai número do código (remove 'A') e incrementa
-    const lastNumber = parseInt(lastStudent.code.substring(1), 10);
+    // Extrai número do código e incrementa. Parse defensivo: se algum código
+    // legado não seguir o padrão "A####", não gera "ANaN" — recomeça a série.
+    const digits = (lastStudent.code || '').replace(/\D/g, '');
+    const lastNumber = /^\d+$/.test(digits) ? parseInt(digits, 10) : 0;
     const nextNumber = lastNumber + 1;
 
     // Formata com zeros à esquerda (ex: A0001, A0002, ..., A9999)
@@ -114,7 +116,11 @@ export class StudentsService {
    * Lista todos os alunos com paginação
    */
   async findAll(page = 1, limit = 20, search?: string) {
-    const skip = (page - 1) * limit;
+    // Clamp defensivo: page/limit negativos ou absurdos não podem gerar
+    // skip negativo (erro do Prisma) nem paginação gigante.
+    const safePage = Math.max(1, Math.trunc(page));
+    const safeLimit = Math.min(100, Math.max(1, Math.trunc(limit)));
+    const skip = (safePage - 1) * safeLimit;
 
     const where: Prisma.StudentWhereInput = {
       deletedAt: null,
@@ -136,7 +142,7 @@ export class StudentsService {
         client.student.findMany({
           where,
           skip,
-          take: limit,
+          take: safeLimit,
           orderBy: { code: 'asc' },
           include: {
             company: {
@@ -168,9 +174,9 @@ export class StudentsService {
       data: students,
       meta: {
         total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
+        page: safePage,
+        limit: safeLimit,
+        totalPages: Math.ceil(total / safeLimit),
       },
     };
   }

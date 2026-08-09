@@ -1,5 +1,5 @@
 // ============================================
-// SMCORP - HTML Receipt Generator
+// Caiso - HTML Receipt Generator
 // ============================================
 
 export interface ReceiptData {
@@ -445,7 +445,7 @@ export function generateReceiptHTML(data: ReceiptData): string {
     <!-- Footer -->
     <div class="footer">
       <p>Este recibo é válido como comprovante de pagamento.</p>
-      <p>Documento gerado eletronicamente pela Plataforma SMCORP.</p>
+      <p>Documento gerado eletronicamente pela Plataforma Caiso.</p>
       <p>Data de emissão: ${new Date().toLocaleString('pt-BR')}</p>
     </div>
   </div>
@@ -509,7 +509,7 @@ export function exampleReceipt(): ReceiptData {
     receiptNumber: generateReceiptNumber(),
     issueDate: new Date(),
     company: {
-      name: 'SMCORP Treinamentos',
+      name: 'Caiso Treinamentos',
       companyTaxId: '12.345.678/0001-90',
       address: 'Av. Paulista, 1000 - São Paulo/SP',
       phone: '(11) 3456-7890',

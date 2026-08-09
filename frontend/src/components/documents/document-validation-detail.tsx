@@ -332,7 +332,7 @@ export function DocumentValidationDetail({
       return;
     }
 
-    const mensagemPadrao = `Olá ${aluno.nome}!\n\nIdentificamos pendências nos seus documentos para o curso "${curso.nome}".\n\n📄 Documentos Pendentes:\n${docsPendentes.map((d) => `• ${d.nome}`).join('\n')}\n\nPor favor, acesse o link de matrícula e envie os documentos faltantes.\n\nAtenciosamente,\nEquipe SMCORP`;
+    const mensagemPadrao = `Olá ${aluno.nome}!\n\nIdentificamos pendências nos seus documentos para o curso "${curso.nome}".\n\n📄 Documentos Pendentes:\n${docsPendentes.map((d) => `• ${d.nome}`).join('\n')}\n\nPor favor, acesse o link de matrícula e envie os documentos faltantes.\n\nAtenciosamente,\nEquipe Caiso`;
 
     const mensagemFinal = mensagemPersonalizada.trim() || mensagemPadrao;
 

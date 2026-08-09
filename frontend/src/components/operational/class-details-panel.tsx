@@ -339,7 +339,7 @@ export function ClassDetailsPanel({
                   <p className="text-[10px] text-gray-500">Nenhum instrutor atribuído</p>
                 ) : (
                   classInstructors.map((instructor) => {
-                    const whatsappMessage = `Olá ${instructor.name}, tudo bem? Aqui é da SMCORP sobre a turma ${selectedClass.code}.`;
+                    const whatsappMessage = `Olá ${instructor.name}, tudo bem? Aqui é da Caiso sobre a turma ${selectedClass.code}.`;
                     const whatsappUrl = buildWhatsAppWebUrl(instructor.phone, whatsappMessage);
 
                     return (

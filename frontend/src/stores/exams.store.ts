@@ -5,7 +5,7 @@ import { useClassesStore } from './classes.store';
 import { examsService } from '@/services/exams.service';
 
 // ============================================
-// SMCORP - Scheduled Exams Store (Module 03)
+// Caiso - Scheduled Exams Store (Module 03)
 // ============================================
 
 export type ScheduledExamStatus = 'Scheduled' | 'Cancelled';

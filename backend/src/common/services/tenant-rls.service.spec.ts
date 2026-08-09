@@ -34,18 +34,21 @@ describe('TenantRlsService', () => {
     tenantContext = module.get<TenantContextService>(TenantContextService);
   });
 
-  it('abre transação e arma RLS (SET LOCAL ROLE + app.tenant_id) antes de rodar fn', async () => {
+  it('abre transação e arma RLS (SESSION AUTHORIZATION + app.tenant_id) antes de rodar fn', async () => {
     const fn = jest.fn().mockResolvedValue('resultado');
 
     const result = await service.withTenantRls(fn);
 
     expect(result).toBe('resultado');
-    expect(mockPrisma.$transaction).toHaveBeenCalled();
-    expect(mockTx.$executeRawUnsafe).toHaveBeenCalledWith('SET LOCAL ROLE smcorp_rls');
-    expect(mockTx.$executeRaw).toHaveBeenCalled();
+    expect(mockPrisma.$transaction).toHaveBeenCalledWith(expect.any(Function), {
+      timeout: 15000,
+      maxWait: 5000,
+    });
+    expect(mockTx.$executeRaw).toHaveBeenCalledTimes(2);
     // set_config com o tenantId do contexto (tagged template do Prisma:
-    // (strings, ...values) — o valor interpolado chega como 2º argumento)
-    expect(mockTx.$executeRaw.mock.calls[0][1]).toBe('tenant-abc');
+    // (strings, ...values) — o valor interpolado chega como 2º argumento;
+    // é o 2º $executeRaw, depois do SET LOCAL SESSION AUTHORIZATION)
+    expect(mockTx.$executeRaw.mock.calls[1][1]).toBe('tenant-abc');
     // fn recebe o MESMO client transacional
     expect(fn).toHaveBeenCalledWith(mockTx);
   });

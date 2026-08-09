@@ -7,7 +7,7 @@ import type { Instructor } from './instructors.store';
 export type { Instructor } from './instructors.store';
 
 // ============================================
-// SMCORP - Settings Store (Módulo 00)
+// Caiso - Settings Store (Módulo 00)
 // ============================================
 
 // Types

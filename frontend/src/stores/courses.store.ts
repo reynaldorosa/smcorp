@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 // ============================================
-// SMCORP - Courses Store (Módulo 01)
+// Caiso - Courses Store (Módulo 01)
 // ============================================
 
 export interface Course {

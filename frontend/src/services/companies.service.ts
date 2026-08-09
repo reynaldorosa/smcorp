@@ -1,7 +1,7 @@
 import { api } from '@/lib/api';
 
 // ============================================
-// SMCORP - Companies Service (Módulo Empresas)
+// Caiso - Companies Service (Módulo Empresas)
 // ============================================
 
 export interface Company {

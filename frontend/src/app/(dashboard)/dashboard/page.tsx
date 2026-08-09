@@ -44,7 +44,7 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Dashboard Executivo</h1>
-                    <p className="text-slate-600 text-sm">Visão estratégica em tempo real da Plataforma SMCORP</p>
+                    <p className="text-slate-600 text-sm">Visão estratégica em tempo real da Plataforma Caiso</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">

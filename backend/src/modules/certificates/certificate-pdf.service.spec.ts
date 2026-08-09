@@ -10,7 +10,7 @@ describe('CertificatePdfService', () => {
   it('gera um buffer PDF válido com os dados do certificado', async () => {
     const buffer = await service.generate(
       {
-        certificateNumber: 'SMCORP-2026-00001',
+        certificateNumber: 'CAISO-2026-00001',
         issuedAt: new Date('2026-08-01'),
         expiresAt: new Date('2027-08-01'),
         validityMonths: 12,
@@ -19,7 +19,7 @@ describe('CertificatePdfService', () => {
         course: { name: 'Curso Teste', code: 'CT1', durationHours: 40 },
         issuedBy: { name: 'Emissor Teste' },
       },
-      'https://smcorp.com.br/verificar-certificado?numero=SMCORP-2026-00001',
+      'https://caiso.com.br/verificar-certificado?numero=CAISO-2026-00001',
     );
 
     expect(buffer).toBeInstanceOf(Buffer);
@@ -30,7 +30,7 @@ describe('CertificatePdfService', () => {
   it('funciona sem dados opcionais (aluno/curso ausentes)', async () => {
     const buffer = await service.generate(
       {
-        certificateNumber: 'SMCORP-2026-00002',
+        certificateNumber: 'CAISO-2026-00002',
         issuedAt: null,
         expiresAt: null,
         validityMonths: 6,
@@ -39,7 +39,7 @@ describe('CertificatePdfService', () => {
         course: null,
         issuedBy: null,
       },
-      'https://smcorp.com.br/verificar-certificado?numero=SMCORP-2026-00002',
+      'https://caiso.com.br/verificar-certificado?numero=CAISO-2026-00002',
     );
 
     expect(buffer.subarray(0, 4).toString()).toBe('%PDF');

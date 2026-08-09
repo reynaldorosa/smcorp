@@ -31,10 +31,10 @@ export class CertificatesService {
     return `CERT${String(num).padStart(4, '0')}`;
   }
 
-  // ── Gerar número único SMCORP-ANO-SEQUENCIAL ──
+  // ── Gerar número único Caiso-ANO-SEQUENCIAL ──
   private async generateCertificateNumber(): Promise<string> {
     const year = new Date().getFullYear();
-    const prefix = `SMCORP-${year}-`;
+    const prefix = `Caiso-${year}-`;
     const last = await this.prisma.certificate.findFirst({
       where: { certificateNumber: { startsWith: prefix } },
       orderBy: { certificateNumber: 'desc' },
@@ -302,7 +302,7 @@ export class CertificatesService {
       );
     }
 
-    const appUrl = process.env.APP_URL || 'https://smcorp.com.br';
+    const appUrl = process.env.APP_URL || 'https://caiso.com.br';
     const verifyUrl = `${appUrl.replace(/\/$/, '')}/verificar-certificado?numero=${encodeURIComponent(cert.certificateNumber)}`;
 
     return this.certificatePdf.generate(

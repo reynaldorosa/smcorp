@@ -1,5 +1,5 @@
 // ============================================
-// SMCORP - Smart Cost Generation Utility
+// Caiso - Smart Cost Generation Utility
 // Ported from portalfigma/gerarCustosInteligentes.ts
 // ============================================
 

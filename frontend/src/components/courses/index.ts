@@ -1,5 +1,5 @@
 // ============================================
-// SMCORP - Courses Components (Módulo 01)
+// Caiso - Courses Components (Módulo 01)
 // ============================================
 
 export { CourseCard } from './course-card';

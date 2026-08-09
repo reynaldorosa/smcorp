@@ -109,7 +109,7 @@ export class CommunicationService {
     text?: string;
     senderName?: string;
   }): Promise<SendResult> {
-    const subject = data.subject || 'SMCORP';
+    const subject = data.subject || 'Caiso';
     const html = data.html || this.escapeToHtml(data.text || '');
 
     // 1) SMTP do tenant (configurado na UI)

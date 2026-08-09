@@ -129,7 +129,7 @@ export function AttendanceListDialog({
         doc.addPage();
       }
 
-      // Cabeçalho vermelho SMCORP
+      // Cabeçalho vermelho Caiso
       doc.setFillColor(220, 38, 38); // #dc2626
       doc.rect(0, 0, 210, 40, 'F');
 

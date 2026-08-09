@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 // ============================================
-// SMCORP - Companies Store (Módulo 05)
+// Caiso - Companies Store (Módulo 05)
 // B2B Client Management
 // ============================================
 

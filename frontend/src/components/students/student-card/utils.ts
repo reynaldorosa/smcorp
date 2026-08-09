@@ -154,7 +154,7 @@ ${enrollmentLink}
 
 Qualquer dúvida, estou à disposição!
 
-Equipe SMCORP`;
+Equipe Caiso`;
 
     case 'documents':
       return `Olá ${firstName}! 📄
@@ -168,7 +168,7 @@ ${enrollmentLink}
 
 Precisa de ajuda? Estou aqui!
 
-Equipe SMCORP`;
+Equipe Caiso`;
 
     case 'payment':
       return `Olá ${firstName}! 💳
@@ -183,7 +183,7 @@ ${enrollmentLink}
 
 ✅ Formas de pagamento disponíveis no link!
 
-Equipe SMCORP`;
+Equipe Caiso`;
 
     case 'exam':
       if (!student.examStatus?.active) return '';
@@ -204,7 +204,7 @@ Lembrando: Sua prova está agendada!
 
 Boa prova!
 
-Equipe SMCORP`;
+Equipe Caiso`;
 
     case 'welcome':
       const startDate = classData?.startDate
@@ -224,7 +224,7 @@ ${enrollmentLink}
 
 Estamos ansiosos para ter você conosco!
 
-Equipe SMCORP`;
+Equipe Caiso`;
 
     default:
       return `Olá ${firstName}! Segue o link da sua matrícula: ${enrollmentLink}`;
@@ -300,7 +300,7 @@ export const generateEmailContent = (
   const firstName = (student.name || '').split(' ')[0] || 'Aluno';
   const classCode = classData?.code || '';
 
-  const subject = 'Sua Matrícula na SMCORP';
+  const subject = 'Sua Matrícula na Caiso';
   const body = `Olá ${firstName}! 👋
 
 Sua matrícula na ${classCode} está confirmada! 🎓
@@ -315,7 +315,7 @@ ${enrollmentLink}
 
 Qualquer dúvida, estou à disposição!
 
-Equipe SMCORP`;
+Equipe Caiso`;
 
   return { subject, body };
 };

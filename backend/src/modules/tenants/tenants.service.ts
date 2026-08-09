@@ -330,7 +330,7 @@ export class TenantsService {
         'Defina o valor mensal da assinatura (price > 0) antes de ativar.',
       );
     }
-    const planName = dto.planName || subscription.planName || 'Plano SMCORP';
+    const planName = dto.planName || subscription.planName || 'Plano Caiso';
 
     const mp = await this.mercadoPago.createSubscription({
       tenantId,

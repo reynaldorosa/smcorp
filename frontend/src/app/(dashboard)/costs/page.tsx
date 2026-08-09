@@ -526,14 +526,19 @@ export default function CostsPage() {
     }
   };
 
-  const handleRenumberEntries = () => {
+  const handleRenumberEntries = async () => {
     if (costEntries.length === 0) {
       toast.info('ℹ️ Não há lançamentos para renumerar.');
       return;
     }
 
-    renumberCostEntries();
-    toast.success(`✅ ${costEntries.length} lançamento(s) renumerado(s).`);
+    const count = costEntries.length;
+    const success = await renumberCostEntries();
+    if (success) {
+      toast.success(`✅ ${count} lançamento(s) renumerado(s).`);
+    } else {
+      toast.error('Falha ao renumerar no servidor — recarregue a página e tente de novo.');
+    }
   };
 
   // Convert CostEntry to FinancialEntry (payable) and Student payments to receivable

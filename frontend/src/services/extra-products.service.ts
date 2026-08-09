@@ -1,7 +1,7 @@
 import { api } from '@/lib/api';
 
 // ============================================
-// SMCORP - Extra Products Service (Módulo 00 - Settings)
+// Caiso - Extra Products Service (Módulo 00 - Settings)
 // ============================================
 
 export type ProductType = 'product' | 'extra';

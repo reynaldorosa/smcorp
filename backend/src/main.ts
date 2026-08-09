@@ -35,8 +35,8 @@ async function bootstrap() {
 
   if (swaggerEnabled) {
     const config = new DocumentBuilder()
-      .setTitle('SMCORP API')
-      .setDescription('API do Sistema de Gestão de Treinamentos SMCORP')
+      .setTitle('Caiso API')
+      .setDescription('API do Sistema de Gestão de Treinamentos Caiso')
       .setVersion('1.0')
       .addBearerAuth(
         {
@@ -66,7 +66,7 @@ async function bootstrap() {
   console.log(`
   ╔════════════════════════════════════════════════════════════╗
   ║                                                            ║
-  ║   🚀 SMCORP Backend is running!                            ║
+  ║   🚀 Caiso Backend is running!                            ║
   ║                                                            ║
   ║   📡 API:     http://localhost:${port}/api/v1                ║
   ${swaggerEnabled ? `║   📚 Swagger: http://localhost:${port}/api/docs              ║\n  ` : ''}║   💚 Health:  http://localhost:${port}/health                ║

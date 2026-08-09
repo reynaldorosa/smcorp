@@ -5,7 +5,7 @@ export class UserResponseDto {
   @ApiProperty({ example: 'uuid-here' })
   id: string;
 
-  @ApiProperty({ example: 'admin@smcorp.com.br' })
+  @ApiProperty({ example: 'admin@caiso.com.br' })
   email: string;
 
   @ApiProperty({ example: 'Administrador' })

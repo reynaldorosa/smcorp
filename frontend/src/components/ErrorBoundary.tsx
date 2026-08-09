@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 // ============================================
-// SMCORP - Error Boundary
+// Caiso - Error Boundary
 // Migrado de: portalsmcorpfigma/src/app/components/ErrorBoundary.tsx
 // ============================================
 

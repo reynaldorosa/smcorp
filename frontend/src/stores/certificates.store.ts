@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 // ============================================
-// SMCORP - Certificates Store (Módulo Certificados)
+// Caiso - Certificates Store (Módulo Certificados)
 // ============================================
 
 export interface Certificate {

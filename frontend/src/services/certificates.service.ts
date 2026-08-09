@@ -2,7 +2,7 @@ import { api } from '@/lib/api';
 import type { Certificate, CertificateStats } from '@/stores/certificates.store';
 
 // ============================================
-// SMCORP - Certificates Service
+// Caiso - Certificates Service
 // ============================================
 
 export interface CreateCertificateDTO {

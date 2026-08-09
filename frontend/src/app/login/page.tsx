@@ -91,15 +91,15 @@ export default function LoginPage() {
         
         <div className="relative z-10 flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-600 shadow-lg shadow-red-900/20">
-            <span className="text-lg font-bold">SM</span>
+            <span className="text-lg font-bold">C</span>
           </div>
-          <span className="text-2xl font-bold tracking-tight">SMCORP Portal</span>
+          <span className="text-2xl font-bold tracking-tight">Caiso Portal</span>
         </div>
 
         <div className="relative z-10 space-y-8">
           <blockquote className="space-y-4 max-w-lg">
             <p className="text-xl font-light leading-relaxed text-slate-200">
-              &ldquo;Centralize auditorias, monitore compliance e otimize a performance corporativa em uma única plataforma integrada.&rdquo;
+              &ldquo;Gestão completa de treinamentos offshore: cursos, turmas, alojamento, documentos e certificados em uma única plataforma.&rdquo;
             </p>
           </blockquote>
           
@@ -109,8 +109,8 @@ export default function LoginPage() {
                 <LayoutDashboard className="h-5 w-5 text-red-500" />
               </div>
               <div>
-                <p className="font-medium text-white">Dashboard Executivo</p>
-                <p className="text-xs text-slate-500">Visão completa em tempo real</p>
+                <p className="font-medium text-white">Cursos & Turmas</p>
+                <p className="text-xs text-slate-500">NRs, HUET, escape e sobrevivência</p>
               </div>
             </div>
             
@@ -119,8 +119,8 @@ export default function LoginPage() {
                 <ShieldCheck className="h-5 w-5 text-red-500" />
               </div>
               <div>
-                <p className="font-medium text-white">Segurança & Compliance</p>
-                <p className="text-xs text-slate-500">Controle rigoroso de acesso</p>
+                <p className="font-medium text-white">Alojamento & Logística</p>
+                <p className="text-xs text-slate-500">Hospedagem e infraestrutura do aluno</p>
               </div>
             </div>
 
@@ -129,15 +129,15 @@ export default function LoginPage() {
                 <TrendingUp className="h-5 w-5 text-red-500" />
               </div>
               <div>
-                <p className="font-medium text-white">Análise de Performance</p>
-                <p className="text-xs text-slate-500">Métricas detalhadas de evolução</p>
+                <p className="font-medium text-white">Documentos & Certificados</p>
+                <p className="text-xs text-slate-500">Da matrícula ao certificado digital</p>
               </div>
             </div>
           </div>
         </div>
 
         <div className="relative z-10 flex justify-between items-center text-sm text-slate-500">
-          <p>SMCORP System © 2026</p>
+          <p>Caiso System © 2026</p>
           <p>v2.5.0 (Stable)</p>
         </div>
       </div>
@@ -148,9 +148,9 @@ export default function LoginPage() {
           {/* Logo Mobile */}
           <div className="lg:hidden flex flex-col items-center mb-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-600 mb-4">
-              <span className="text-lg font-bold text-white">SM</span>
+              <span className="text-lg font-bold text-white">C</span>
             </div>
-            <h1 className="text-2xl font-bold text-white">SMCORP</h1>
+            <h1 className="text-2xl font-bold text-white">Caiso</h1>
           </div>
 
           <div className="flex flex-col space-y-2 text-center lg:text-left">

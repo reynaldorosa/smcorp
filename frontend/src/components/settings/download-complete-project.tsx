@@ -143,11 +143,11 @@ Dúvidas? Consulte INDICE_DOCUMENTACAO_DEPLOY.md
 }
 
 function generateReadme(): string {
-  return `# PLATAFORMA SMCORP
+  return `# PLATAFORMA Caiso
 
 ## Download Realizado com Sucesso!
 
-Este é o pacote de documentação da Plataforma SMCORP.
+Este é o pacote de documentação da Plataforma Caiso.
 
 ---
 
@@ -198,7 +198,7 @@ npm start
 
 ---
 
-© ${new Date().getFullYear()} SMCORP - Sistema de Gestão para Centros de Treinamento
+© ${new Date().getFullYear()} Caiso - Sistema de Gestão para Centros de Treinamento
 `;
 }
 
@@ -272,7 +272,7 @@ export const DownloadCompleteProject: React.FC = () => {
           </div>
 
           <div className="flex-1">
-            <h3 className="font-bold text-lg mb-2">Download do Projeto SMCORP</h3>
+            <h3 className="font-bold text-lg mb-2">Download do Projeto Caiso</h3>
 
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               Baixe toda a documentação de deploy, guias completos e arquivos de configuração do projeto.

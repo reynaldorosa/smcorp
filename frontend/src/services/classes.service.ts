@@ -2,7 +2,7 @@ import { api } from '@/lib/api';
 import type { Class } from '@/stores/classes.store';
 
 // ============================================
-// SMCORP - Classes Service (Módulo 02)
+// Caiso - Classes Service (Módulo 02)
 // ============================================
 
 export interface CreateClassDTO {

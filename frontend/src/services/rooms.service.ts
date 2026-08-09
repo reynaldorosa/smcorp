@@ -1,7 +1,7 @@
 import { api } from '@/lib/api';
 
 // ============================================
-// SMCORP - Rooms Service (Módulo 00 - Settings)
+// Caiso - Rooms Service (Módulo 00 - Settings)
 // ============================================
 
 export interface Room {

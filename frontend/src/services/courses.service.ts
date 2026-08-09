@@ -2,7 +2,7 @@ import { api } from '@/lib/api';
 import type { Course } from '@/stores/courses.store';
 
 // ============================================
-// SMCORP - Courses Service (Módulo 01)
+// Caiso - Courses Service (Módulo 01)
 // ============================================
 
 type RequiredDocumentInput = string | { name: string; requiresUpload?: boolean };

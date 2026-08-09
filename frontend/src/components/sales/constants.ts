@@ -1,5 +1,5 @@
 // ============================================
-// SMCORP - Sales Module Constants (Módulo 04)
+// Caiso - Sales Module Constants (Módulo 04)
 // ============================================
 
 import type { ReadyMessage } from './types';

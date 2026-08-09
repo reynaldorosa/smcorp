@@ -1,5 +1,5 @@
 // ============================================
-// SMCORP - Settings Components
+// Caiso - Settings Components
 // ============================================
 
 export { RoomsTab } from './rooms-tab';

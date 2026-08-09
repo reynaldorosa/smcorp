@@ -79,7 +79,7 @@ export class CertificatePdfService implements OnModuleInit {
    */
   async generate(data: CertificatePdfData, verifyUrl: string): Promise<Buffer> {
     this.ensureFonts();
-    const institution = process.env.INSTITUTION_NAME || 'SMCORP';
+    const institution = process.env.INSTITUTION_NAME || 'Caiso';
 
     const issuedAt = data.issuedAt ? this.formatDate(data.issuedAt) : '—';
     const expiresAt = data.expiresAt ? this.formatDate(data.expiresAt) : '—';

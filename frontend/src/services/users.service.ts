@@ -1,7 +1,7 @@
 import { api } from '@/lib/api';
 
 // ============================================
-// SMCORP - Users Service (Módulo 00 - Settings)
+// Caiso - Users Service (Módulo 00 - Settings)
 // ============================================
 
 export type UserRole = 'MASTER' | 'ADMIN' | 'COLLABORATOR' | 'SELLER';

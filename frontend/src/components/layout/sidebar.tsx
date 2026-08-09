@@ -153,7 +153,7 @@ export function Sidebar() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
               <span className="text-lg font-bold text-primary-foreground">S</span>
             </div>
-            <span className="text-lg font-bold text-primary">SMCORP</span>
+            <span className="text-lg font-bold text-primary">Caiso</span>
           </Link>
         )}
         <Button

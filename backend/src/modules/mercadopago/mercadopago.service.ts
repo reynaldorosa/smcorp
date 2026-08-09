@@ -193,12 +193,12 @@ export class MercadoPagoService {
 
   private getWebhookUrl(): string {
     if (this.webhookUrl) return this.webhookUrl;
-    const appUrl = this.configService.get<string>('APP_URL') || 'https://smcorp.com.br';
+    const appUrl = this.configService.get<string>('APP_URL') || 'https://caiso.com.br';
     return `${appUrl.replace(/\/$/, '')}/api/v1/webhooks/mercadopago`;
   }
 
   private getBackUrl(): string {
-    const appUrl = this.configService.get<string>('APP_URL') || 'https://smcorp.com.br';
+    const appUrl = this.configService.get<string>('APP_URL') || 'https://caiso.com.br';
     return `${appUrl.replace(/\/$/, '')}/settings/billing`;
   }
 

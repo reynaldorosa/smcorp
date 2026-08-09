@@ -1,5 +1,5 @@
 // ============================================
-// SMCORP - Sales Components (Módulo 04)
+// Caiso - Sales Components (Módulo 04)
 // ============================================
 
 export { ContactItem } from './contact-item';

@@ -355,7 +355,7 @@ ${pendingDocs.map((d) => `• ${d.name}`).join('\n')}
 Por favor, acesse seu link de matrícula e envie os documentos faltantes.
 
 Atenciosamente,
-Equipe SMCORP`;
+Equipe Caiso`;
 
     setIsSendingNotification(true);
 
@@ -891,7 +891,7 @@ Equipe SMCORP`;
                     Por favor, acesse seu link de matrícula e envie os documentos faltantes.
                     {'\n\n'}
                     Atenciosamente,{'\n'}
-                    Equipe SMCORP
+                    Equipe Caiso
                   </div>
                 </CardContent>
               </Card>
