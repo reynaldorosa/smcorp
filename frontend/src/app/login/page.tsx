@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -239,7 +240,19 @@ export default function LoginPage() {
                 </Button>
               </div>
             </form>
-            
+
+            {/* Link de cadastro (onboarding público do SaaS) */}
+            <div className="text-center">
+              <Link
+                href="/signup"
+                className="text-sm text-slate-400 hover:text-white transition-colors"
+              >
+                Seu centro de treinamento é novo?{' '}
+                <span className="font-medium text-red-400 hover:text-red-300">
+                  Crie sua conta grátis
+                </span>
+              </Link>
+            </div>
             {/* Demo Info */}
             {process.env.NODE_ENV !== 'production' && (
               <>

@@ -159,9 +159,11 @@ export class CoursesService {
     };
   }
 
-  async findAll() {
+  async findAll(includeDeleted = false) {
     const courses = await this.prisma.course.findMany({
-      where: { deletedAt: null },
+      // includeDeleted=true: usado pela tela de restauração (cursos excluídos
+      // ficam visíveis na UI com a opção de restaurar)
+      where: includeDeleted ? {} : { deletedAt: null },
       orderBy: { createdAt: 'desc' },
     });
 

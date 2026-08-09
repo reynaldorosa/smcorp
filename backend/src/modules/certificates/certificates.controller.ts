@@ -37,8 +37,15 @@ export class CertificatesController {
     @Query('courseId') courseId?: string,
     @Query('studentId') studentId?: string,
     @Query('search') search?: string,
+    @Query('includeDeleted') includeDeleted?: string,
   ) {
-    return this.certificatesService.findAll({ status, courseId, studentId, search });
+    return this.certificatesService.findAll({
+      status,
+      courseId,
+      studentId,
+      search,
+      includeDeleted: includeDeleted === 'true',
+    });
   }
 
   @Get('stats')

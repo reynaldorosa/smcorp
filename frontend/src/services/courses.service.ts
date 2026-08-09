@@ -131,9 +131,12 @@ function mapApiCourseToStore(course: ApiCourse): Course {
 export const coursesService = {
   /**
    * Busca todos os cursos
+   * @param includeDeleted true: inclui cursos excluídos (soft delete) — tela de restauração
    */
-  getAll: async (): Promise<Course[]> => {
-    const response = await api.get('/courses');
+  getAll: async (includeDeleted = false): Promise<Course[]> => {
+    const response = await api.get('/courses', {
+      params: includeDeleted ? { includeDeleted: 'true' } : undefined,
+    });
 
     const courses = response.data as ApiCourse[];
     return (Array.isArray(courses) ? courses : []).map(mapApiCourseToStore);
@@ -168,6 +171,14 @@ export const coursesService = {
    */
   delete: async (id: string): Promise<void> => {
     await api.delete(`/courses/${id}`);
+  },
+
+  /**
+   * Restaura um curso excluído (soft delete)
+   */
+  restore: async (id: string): Promise<Course> => {
+    const response = await api.post(`/courses/${id}/restore`);
+    return mapApiCourseToStore(response.data as ApiCourse);
   },
 
   /**

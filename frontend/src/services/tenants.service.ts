@@ -134,6 +134,27 @@ export const tenantsService = {
     return response.data;
   },
 
+  /**
+   * Onboarding público de um novo centro de treinamento (trial 14 dias).
+   * O backend já devolve os tokens — o admin sai autenticado.
+   */
+  signup: async (data: {
+    tenantName: string;
+    slug: string;
+    cnpj?: string;
+    adminName: string;
+    adminEmail: string;
+    adminPassword: string;
+  }) => {
+    const response = await api.post('/tenant/signup', data);
+    return response.data as {
+      accessToken: string;
+      refreshToken: string;
+      user: { id: string; email: string; name: string; role: string; tenantId?: string };
+      tenant: { id: string; slug: string; name: string; status: string; trialEndsAt: string };
+    };
+  },
+
   getBilling: async (): Promise<BillingInfo> => {
     const response = await api.get('/tenant/billing');
     return response.data;

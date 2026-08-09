@@ -51,8 +51,11 @@ export class CertificatesService {
     courseId?: string;
     studentId?: string;
     search?: string;
+    includeDeleted?: boolean;
   }) {
-    const where: any = { deletedAt: null };
+    // includeDeleted=true: usado pela tela de restauração (certificados
+    // excluídos ficam visíveis na UI com a opção de restaurar)
+    const where: any = filters?.includeDeleted ? {} : { deletedAt: null };
 
     if (filters?.status) where.status = filters.status;
     if (filters?.courseId) where.courseId = filters.courseId;

@@ -419,6 +419,12 @@ export const costsService = {
     return data.map((item: ApiCostCriterion) => mapCriterionFromApi(item));
   },
 
+  /** Detalhe de um critério de custo (para edição com dados frescos) */
+  getCriterionById: async (id: string): Promise<CostCriterion> => {
+    const response = await api.get(`/costs/criteria/${id}`);
+    return mapCriterionFromApi(response.data as ApiCostCriterion);
+  },
+
   createCriterion: async (data: CreateCostCriterionDTO): Promise<CostCriterion> => {
     const response = await api.post('/costs/criteria', {
       name: data.name,
@@ -459,6 +465,12 @@ export const costsService = {
       data: (payload.data || []).map((item: ApiCostEntry) => mapCostEntryFromApi(item)),
       meta: payload.meta,
     };
+  },
+
+  /** Detalhe de uma entrada de custo (para edição com dados frescos) */
+  getEntryById: async (id: string): Promise<CostEntry> => {
+    const response = await api.get(`/costs/entries/${id}`);
+    return mapCostEntryFromApi(response.data);
   },
 
   createEntry: async (data: CreateCostEntryDTO): Promise<CostEntry> => {

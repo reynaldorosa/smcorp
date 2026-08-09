@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { CoursesService } from './courses.service';
 import { CreateCourseDto, CreateCourseSchema } from './dto/create-course.dto';
@@ -22,8 +32,8 @@ export class CoursesController {
   // (modulo02), mesmo para quem não tem modulo01.
   @Get()
   @Roles(UserRole.ADMIN, UserRole.COLLABORATOR)
-  findAll() {
-    return this.coursesService.findAll();
+  findAll(@Query('includeDeleted') includeDeleted?: string) {
+    return this.coursesService.findAll(includeDeleted === 'true');
   }
 
   @Get(':id')

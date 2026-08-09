@@ -30,6 +30,8 @@ export const certificatesService = {
     courseId?: string;
     studentId?: string;
     search?: string;
+    /** true: inclui certificados excluídos (soft delete) na listagem */
+    includeDeleted?: boolean;
   }): Promise<Certificate[]> => {
     const response = await api.get('/certificates', { params: filters });
     return response.data;
@@ -67,6 +69,12 @@ export const certificatesService = {
 
   delete: async (id: string): Promise<void> => {
     await api.delete(`/certificates/${id}`);
+  },
+
+  /** Restaura um certificado excluído (soft delete) */
+  restore: async (id: string): Promise<Certificate> => {
+    const response = await api.post(`/certificates/${id}/restore`);
+    return response.data;
   },
 
   verify: async (number: string): Promise<{

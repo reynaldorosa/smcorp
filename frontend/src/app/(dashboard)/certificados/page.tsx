@@ -16,6 +16,8 @@ import {
   Filter,
   ChevronLeft,
   ChevronRight,
+  Archive,
+  RotateCcw,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -76,6 +78,10 @@ export default function CertificadosPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [courseFilter, setCourseFilter] = useState<string>('all');
+  // ── Certificados excluídos (restauração) ──
+  const [showDeleted, setShowDeleted] = useState(false);
+  const [deletedCerts, setDeletedCerts] = useState<Certificate[]>([]);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
   const [showIssueDialog, setShowIssueDialog] = useState(false);
   const [showRevokeDialog, setShowRevokeDialog] = useState(false);
   const [showVerifyDialog, setShowVerifyDialog] = useState(false);
@@ -150,6 +156,34 @@ export default function CertificadosPage() {
       loadFromAPI();
     }
   }, [students, courses, certificates.length, setCertificates]);
+
+  // ── Certificados excluídos: carrega com includeDeleted e filtra os deletados ──
+  const loadDeletedCertificates = async () => {
+    try {
+      const all = await certificatesService.getAll({ includeDeleted: true });
+      setDeletedCerts(
+        all.filter((c) => (c as Certificate & { deletedAt?: string | null }).deletedAt),
+      );
+    } catch {
+      toast.error('Não foi possível carregar certificados excluídos.');
+    }
+  };
+
+  const handleRestoreCertificate = async (id: string) => {
+    setRestoringId(id);
+    try {
+      await certificatesService.restore(id);
+      setDeletedCerts((prev) => prev.filter((c) => c.id !== id));
+      toast.success('Certificado restaurado com sucesso!');
+      // Mantém a lista principal atualizada
+      const apiCerts = await certificatesService.getAll();
+      setCertificates(apiCerts);
+    } catch {
+      toast.error('Não foi possível restaurar o certificado.');
+    } finally {
+      setRestoringId(null);
+    }
+  };
 
   // Compute stats
   useEffect(() => {
@@ -521,6 +555,68 @@ export default function CertificadosPage() {
                 </Select>
               </CardContent>
             </Card>
+
+        {/* Certificados excluídos (restauração) */}
+        <Card>
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+            <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+              <Archive className="h-4 w-4 text-gray-400" />
+              Certificados Excluídos
+            </CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const next = !showDeleted;
+                setShowDeleted(next);
+                if (next) void loadDeletedCertificates();
+              }}
+            >
+              {showDeleted ? 'Ocultar' : 'Ver excluídos'}
+            </Button>
+          </CardHeader>
+          {showDeleted && (
+            <CardContent className="p-0">
+              {deletedCerts.length === 0 ? (
+                <p className="p-4 text-sm text-gray-500">Nenhum certificado excluído.</p>
+              ) : (
+                <div className="divide-y">
+                  {deletedCerts.map((c) => {
+                    const studentName =
+                      (c as Certificate & { student?: { name?: string } }).student?.name ||
+                      c.studentName;
+                    const courseName =
+                      (c as Certificate & { course?: { name?: string } }).course?.name ||
+                      c.courseName;
+                    return (
+                      <div
+                        key={c.id}
+                        className="flex items-center justify-between px-4 py-3 text-sm"
+                      >
+                        <div>
+                          <p className="font-medium text-gray-800">{c.certificateNumber}</p>
+                          <p className="text-xs text-gray-500">
+                            {studentName || '—'} · {courseName || '—'}
+                          </p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-green-700 border-green-300 hover:bg-green-50"
+                          disabled={restoringId === c.id}
+                          onClick={() => handleRestoreCertificate(c.id)}
+                        >
+                          <RotateCcw className="mr-1 h-3.5 w-3.5" />
+                          {restoringId === c.id ? 'Restaurando...' : 'Restaurar'}
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          )}
+        </Card>
 
         {/* Tabela */}
         <Card>

@@ -39,6 +39,10 @@ export function CourseList() {
 
   // Filter state
   const [statusFilter, setStatusFilter] = useState<'ativos' | 'inativos' | 'todos'>('ativos');
+  // ── Cursos excluídos (restauração) ──
+  const [showDeleted, setShowDeleted] = useState(false);
+  const [deletedCourses, setDeletedCourses] = useState<Course[]>([]);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
 
   // Dialog states
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
@@ -94,6 +98,30 @@ export function CourseList() {
       return true;
     });
   }, [courses, statusFilter]);
+
+  // ── Cursos excluídos: carrega com includeDeleted e filtra os deletados ──
+  const loadDeletedCourses = async () => {
+    try {
+      const all = await coursesService.getAll(true);
+      setDeletedCourses(all.filter((c) => c.deleted));
+    } catch {
+      toast.error('Não foi possível carregar cursos excluídos.');
+    }
+  };
+
+  const handleRestoreCourse = async (id: string) => {
+    setRestoringId(id);
+    try {
+      await coursesService.restore(id);
+      setDeletedCourses((prev) => prev.filter((c) => c.id !== id));
+      toast.success('Curso restaurado com sucesso!');
+      await loadCourses();
+    } catch {
+      toast.error('Não foi possível restaurar o curso.');
+    } finally {
+      setRestoringId(null);
+    }
+  };
 
   // Handlers
   const handleAddNew = () => {
@@ -153,6 +181,56 @@ export function CourseList() {
           <Badge variant="secondary">
             {filteredCourses.length} {filteredCourses.length === 1 ? 'curso' : 'cursos'}
           </Badge>
+        </div>
+
+        {/* Cursos excluídos (restauração) */}
+        <div className="rounded-lg border border-gray-200">
+          <div className="flex items-center justify-between px-4 py-3">
+            <span className="text-sm font-medium text-gray-700 flex items-center gap-2">
+              <Archive className="h-4 w-4 text-gray-400" />
+              Cursos Excluídos
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const next = !showDeleted;
+                setShowDeleted(next);
+                if (next) void loadDeletedCourses();
+              }}
+            >
+              {showDeleted ? 'Ocultar' : 'Ver excluídos'}
+            </Button>
+          </div>
+          {showDeleted && (
+            <div className="border-t border-gray-100 divide-y">
+              {deletedCourses.length === 0 ? (
+                <p className="px-4 py-3 text-sm text-gray-500">Nenhum curso excluído.</p>
+              ) : (
+                deletedCourses.map((course) => (
+                  <div
+                    key={course.id}
+                    className="flex items-center justify-between px-4 py-3 text-sm"
+                  >
+                    <div>
+                      <p className="font-medium text-gray-800">{course.name}</p>
+                      <p className="text-xs text-gray-500">{course.code}</p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-green-700 border-green-300 hover:bg-green-50"
+                      disabled={restoringId === course.id}
+                      onClick={() => handleRestoreCourse(course.id)}
+                    >
+                      <RefreshCw className="mr-1 h-3.5 w-3.5" />
+                      {restoringId === course.id ? 'Restaurando...' : 'Restaurar'}
+                    </Button>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
