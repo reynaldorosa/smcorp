@@ -85,7 +85,12 @@ export class CommunicationService {
       return await this.sendViaUniqSuporte(channel, data);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      this.logger.warn(`Falha no envio (${channel} → ${recipient}): ${message}`);
+      // PII mascarada nos logs (LGPD): e-mail/telefone não podem aparecer
+      // em agregadores de log (ELK/Datadog) — ex.: "a***@exemplo.com"
+      const masked = recipient
+        .replace(/^(.{1}).+(.{2}@.+)$/, '$1***$2')
+        .replace(/^(.{2}).+(\d{2})$/, '$1***$2');
+      this.logger.warn(`Falha no envio (${channel} → ${masked}): ${message}`);
       await this.logNotification({
         tenantId,
         channel,
@@ -249,8 +254,14 @@ export class CommunicationService {
       if (typeof value === 'string') {
         try {
           decrypted[field] = this.encryptionService.decrypt(value);
-        } catch {
-          // dado não criptografado (legado)
+        } catch (error) {
+          // dado não criptografado (legado) OU chave rotacionada — loga para
+          // distinguir "não configurado" de "falhou ao descriptografar"
+          this.logger.debug(
+            `Campo ${field} não descriptografável (legado ou chave trocada): ${
+              error instanceof Error ? error.message : String(error)
+            }`,
+          );
         }
       }
     }

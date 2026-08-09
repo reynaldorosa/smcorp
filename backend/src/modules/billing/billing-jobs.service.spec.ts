@@ -11,6 +11,7 @@ describe('BillingJobsService', () => {
     },
     subscription: {
       findMany: jest.fn(),
+      updateMany: jest.fn(),
     },
   };
 
@@ -33,15 +34,31 @@ describe('BillingJobsService', () => {
     jest.clearAllMocks();
   });
 
-  it('expira trials vencidos (TRIAL → SUSPENDED)', async () => {
+  it('expira trials vencidos (tenant e assinatura → SUSPENDED)', async () => {
+    mockPrismaService.tenant.findMany.mockResolvedValue([{ id: 't1' }, { id: 't2' }]);
     mockPrismaService.tenant.updateMany.mockResolvedValue({ count: 2 });
+    mockPrismaService.subscription.updateMany.mockResolvedValue({ count: 2 });
 
     const result = await (service as any).expireTrials();
 
     expect(result).toBe(2);
-    expect(mockPrismaService.tenant.updateMany).toHaveBeenCalledWith(
+    // Busca os trials vencidos
+    expect(mockPrismaService.tenant.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ status: 'TRIAL', trialEndsAt: { lt: expect.any(Date) } }),
+      }),
+    );
+    // Tenant suspenso
+    expect(mockPrismaService.tenant.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ id: { in: ['t1', 't2'] } }),
+        data: { status: 'SUSPENDED' },
+      }),
+    );
+    // Assinatura acompanha (período sem pagamento)
+    expect(mockPrismaService.subscription.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ tenantId: { in: ['t1', 't2'] } }),
         data: { status: 'SUSPENDED' },
       }),
     );
@@ -68,7 +85,9 @@ describe('BillingJobsService', () => {
   });
 
   it('runDailyJobs executa os três passos', async () => {
+    mockPrismaService.tenant.findMany.mockResolvedValue([{ id: 't1' }]);
     mockPrismaService.tenant.updateMany.mockResolvedValue({ count: 1 });
+    mockPrismaService.subscription.updateMany.mockResolvedValue({ count: 1 });
     mockPrismaService.subscription.findMany.mockResolvedValue([]);
 
     await service.runDailyJobs();

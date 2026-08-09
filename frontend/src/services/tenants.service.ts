@@ -19,6 +19,7 @@ export interface TenantInfo {
     price: number;
     status: 'TRIAL' | 'ACTIVE' | 'PAST_DUE' | 'CANCELLED' | 'SUSPENDED';
     trialEndsAt: string | null;
+    currentPeriodStart: string | null;
     currentPeriodEnd: string | null;
     cancelAtPeriodEnd: boolean;
   } | null;
@@ -65,6 +66,7 @@ export interface PlatformTenant {
     planName: string | null;
     price: number;
     status: 'TRIAL' | 'ACTIVE' | 'PAST_DUE' | 'CANCELLED' | 'SUSPENDED';
+    currentPeriodStart: string | null;
     currentPeriodEnd: string | null;
     cancelAtPeriodEnd: boolean;
   } | null;

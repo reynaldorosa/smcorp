@@ -110,7 +110,10 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       params.action === 'groupBy'
     ) {
       params.args.where = params.args.where || {};
-      if (params.args.where.tenantId === undefined) {
+      // undefined OU null: um `where.tenantId = null` explícito casaria com
+      // registros de plataforma (tenantId IS NULL) e furaria o isolamento —
+      // sempre força o tenant do contexto.
+      if (params.args.where.tenantId === undefined || params.args.where.tenantId === null) {
         params.args.where.tenantId = tenantId;
       }
     }
@@ -132,14 +135,20 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 
     if (params.action === 'update' || params.action === 'delete') {
       params.args.where = params.args.where || {};
-      if (params.args.where.tenantId === undefined) {
+      // undefined OU null: um `where.tenantId = null` explícito casaria com
+      // registros de plataforma (tenantId IS NULL) e furaria o isolamento —
+      // sempre força o tenant do contexto.
+      if (params.args.where.tenantId === undefined || params.args.where.tenantId === null) {
         params.args.where.tenantId = tenantId;
       }
     }
 
     if (params.action === 'updateMany' || params.action === 'deleteMany') {
       params.args.where = params.args.where || {};
-      if (params.args.where.tenantId === undefined) {
+      // undefined OU null: um `where.tenantId = null` explícito casaria com
+      // registros de plataforma (tenantId IS NULL) e furaria o isolamento —
+      // sempre força o tenant do contexto.
+      if (params.args.where.tenantId === undefined || params.args.where.tenantId === null) {
         params.args.where.tenantId = tenantId;
       }
       // deleteMany vira updateMany (soft delete) — não mexe no data do tenant
@@ -151,7 +160,10 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       params.args.create.tenantId = tenantId;
       params.args.update.tenantId = tenantId;
       params.args.where = params.args.where || {};
-      if (params.args.where.tenantId === undefined) {
+      // undefined OU null: um `where.tenantId = null` explícito casaria com
+      // registros de plataforma (tenantId IS NULL) e furaria o isolamento —
+      // sempre força o tenant do contexto.
+      if (params.args.where.tenantId === undefined || params.args.where.tenantId === null) {
         params.args.where.tenantId = tenantId;
       }
     }

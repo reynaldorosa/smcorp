@@ -32,20 +32,35 @@ export class BillingJobsService {
     );
   }
 
-  /** Trials vencidos → tenant SUSPENDED */
+  /** Trials vencidos → tenant e assinatura SUSPENDED (período sem pagamento) */
   private async expireTrials(): Promise<number> {
-    const result = await this.prisma.tenant.updateMany({
+    const now = new Date();
+    const expired = await this.prisma.tenant.findMany({
       where: {
         status: 'TRIAL',
-        trialEndsAt: { lt: new Date() },
+        trialEndsAt: { lt: now },
         deletedAt: null,
       },
+      select: { id: true },
+    });
+
+    if (expired.length === 0) return 0;
+
+    await this.prisma.tenant.updateMany({
+      where: { id: { in: expired.map((t) => t.id) } },
       data: { status: 'SUSPENDED' },
     });
-    if (result.count > 0) {
-      this.logger.warn(`${result.count} tenant(s) com trial expirado → SUSPENDED`);
-    }
-    return result.count;
+
+    // Consistência: o período do plano acabou sem pagamento — a assinatura
+    // acompanha o tenant (SUSPENDED). O pagamento automático (fase futura)
+    // reativa o período via webhook do MP (subscription_authorized_payment).
+    await this.prisma.subscription.updateMany({
+      where: { tenantId: { in: expired.map((t) => t.id) } },
+      data: { status: 'SUSPENDED' },
+    });
+
+    this.logger.warn(`${expired.length} tenant(s) com trial expirado → SUSPENDED`);
+    return expired.length;
   }
 
   /** Assinatura cancelada (sem cancelAtPeriodEnd) → tenant CANCELLED */

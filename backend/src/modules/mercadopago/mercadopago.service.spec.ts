@@ -89,7 +89,7 @@ describe('MercadoPagoService', () => {
 
     it('aceita assinatura válida', () => {
       const dataId = '12345';
-      const ts = '1700000000';
+      const ts = String(Math.floor(Date.now() / 1000));
       const xRequestId = 'req-1';
       const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`;
       const v1 = createHmac('sha256', secret).update(manifest).digest('hex');
@@ -109,7 +109,7 @@ describe('MercadoPagoService', () => {
         signatureHeader: 'ts=1700000000,v1=abcdef',
         xRequestId: 'req-1',
         dataId: '12345',
-        ts: '1700000000',
+        ts: String(Math.floor(Date.now() / 1000)),
       });
 
       expect(valid).toBe(false);
@@ -121,7 +121,7 @@ describe('MercadoPagoService', () => {
           signatureHeader: undefined,
           xRequestId: 'req-1',
           dataId: '12345',
-          ts: '1700000000',
+          ts: String(Math.floor(Date.now() / 1000)),
         }),
       ).toBe(false);
     });
@@ -177,7 +177,7 @@ describe('MercadoPagoService', () => {
 
       // Assinatura HMAC válida (caminho completo de verificação)
       const dataId = 'mp-1';
-      const ts = '1700000000';
+      const ts = String(Math.floor(Date.now() / 1000));
       const xRequestId = 'req-abc';
       const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`;
       const v1 = createHmac('sha256', 'segredo').update(manifest).digest('hex');
@@ -212,7 +212,7 @@ describe('MercadoPagoService', () => {
         service.handleWebhookEvent({
           action: 'payment.created',
           dataId: 'mp-1',
-          ts: '1700000000',
+          ts: String(Math.floor(Date.now() / 1000)),
           signatureHeader: undefined,
         }),
       ).rejects.toThrow('Assinatura do webhook inválida');
@@ -385,7 +385,7 @@ describe('MercadoPagoService', () => {
       mockPrismaService.tenant.update.mockResolvedValue({});
 
       const dataId = '555';
-      const ts = '1700000000';
+      const ts = String(Math.floor(Date.now() / 1000));
       const xRequestId = 'req-sub';
       const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`;
       const v1 = createHmac('sha256', 'segredo').update(manifest).digest('hex');
@@ -435,7 +435,7 @@ describe('MercadoPagoService', () => {
       mockPrismaService.$transaction.mockImplementation((ops: unknown[]) => Promise.all(ops));
 
       const dataId = '888';
-      const ts = '1700000000';
+      const ts = String(Math.floor(Date.now() / 1000));
       const xRequestId = 'req-auth';
       const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`;
       const v1 = createHmac('sha256', 'segredo').update(manifest).digest('hex');
@@ -487,7 +487,7 @@ describe('MercadoPagoService', () => {
 
     it('ignora eventos desconhecidos sem quebrar', async () => {
       const dataId = 'x1';
-      const ts = '1700000000';
+      const ts = String(Math.floor(Date.now() / 1000));
       const manifest = `id:${dataId};request-id:req-x;ts:${ts};`;
       const v1 = createHmac('sha256', 'segredo').update(manifest).digest('hex');
 
@@ -515,7 +515,7 @@ describe('MercadoPagoService', () => {
       });
 
       const dataId = 'mp-1';
-      const ts = '1700000000';
+      const ts = String(Math.floor(Date.now() / 1000));
       const manifest = `id:${dataId};request-id:req-p;ts:${ts};`;
       const v1 = createHmac('sha256', 'segredo').update(manifest).digest('hex');
 

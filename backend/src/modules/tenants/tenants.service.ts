@@ -58,6 +58,11 @@ export class TenantsService {
     const trialEndsAt = new Date();
     trialEndsAt.setDate(trialEndsAt.getDate() + TRIAL_DAYS);
 
+    // Período inicial do plano: começa na criação e termina no fim do trial.
+    // O pagamento automático (fase futura) renova o período via webhook do MP
+    // (subscription_authorized_payment) atualizando currentPeriodStart/End.
+    const periodStart = new Date();
+
     const passwordHash = await bcrypt.hash(dto.adminPassword, 12);
 
     const provisioned = await this.prisma.$transaction(async (tx) => {
@@ -80,6 +85,8 @@ export class TenantsService {
           provider: 'MERCADO_PAGO',
           status: 'TRIAL',
           trialEndsAt,
+          currentPeriodStart: periodStart,
+          currentPeriodEnd: trialEndsAt,
           price: 0,
         },
       });
@@ -190,6 +197,11 @@ export class TenantsService {
       if (error instanceof ConflictException) {
         throw error;
       }
+      // Concorrência: dois signups simultâneos passam nas checagens e um
+      // bate na constraint única do banco (P2002) — vira 409, não 400.
+      if ((error as { code?: string })?.code === 'P2002') {
+        throw new ConflictException('Dados em conflito — verifique slug, e-mail e CNPJ.');
+      }
       const message = error instanceof Error ? error.message : String(error);
       this.logger.error(`Falha no onboarding do tenant ${dto.slug}`, message);
       throw new BadRequestException('Não foi possível criar o tenant. Tente novamente.');
@@ -224,6 +236,10 @@ export class TenantsService {
       if (error instanceof ConflictException) {
         throw error;
       }
+      // Concorrência: dois creates simultâneos batem na constraint única (P2002)
+      if ((error as { code?: string })?.code === 'P2002') {
+        throw new ConflictException('Dados em conflito — verifique slug, e-mail e CNPJ.');
+      }
       const message = error instanceof Error ? error.message : String(error);
       this.logger.error(`Falha ao criar tenant pela plataforma: ${dto.slug}`, message);
       throw new BadRequestException('Não foi possível criar o tenant. Tente novamente.');
@@ -252,6 +268,7 @@ export class TenantsService {
             price: true,
             status: true,
             trialEndsAt: true,
+            currentPeriodStart: true,
             currentPeriodEnd: true,
             cancelAtPeriodEnd: true,
           },
@@ -419,6 +436,7 @@ export class TenantsService {
               planName: true,
               price: true,
               status: true,
+              currentPeriodStart: true,
               currentPeriodEnd: true,
               cancelAtPeriodEnd: true,
             },
@@ -464,6 +482,7 @@ export class TenantsService {
             price: true,
             status: true,
             trialEndsAt: true,
+            currentPeriodStart: true,
             currentPeriodEnd: true,
             cancelAtPeriodEnd: true,
           },
@@ -503,28 +522,34 @@ export class TenantsService {
       throw new BadRequestException('Tenant não encontrado');
     }
 
-    const updated = await this.prisma.tenant.update({
-      where: { id },
-      data: { status },
+    // Transação: o update do status e o registro de auditoria são atômicos —
+    // se a auditoria falhar, o status não muda sem rastro.
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const result = await tx.tenant.update({
+        where: { id },
+        data: { status },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          tableName: 'Tenant',
+          recordId: id,
+          action: 'UPDATE',
+          userId: actorId,
+          newData: {
+            status,
+            previousStatus: tenant.status,
+            changedBy: 'PLATAFORMA',
+          },
+        },
+      });
+
+      return result;
     });
 
     // O TenantInterceptor cacheia o status por 60s — sem invalidar, a suspensão
     // (ou a reativação) só valeria no próximo TTL.
     this.tenantStatusCache.invalidate(id);
-
-    await this.prisma.auditLog.create({
-      data: {
-        tableName: 'Tenant',
-        recordId: id,
-        action: 'UPDATE',
-        userId: actorId,
-        newData: {
-          status,
-          previousStatus: tenant.status,
-          changedBy: 'PLATAFORMA',
-        },
-      },
-    });
 
     this.logger.log(
       `Status do tenant ${tenant.name} (${id}): ${tenant.status} → ${status} (por ${actorId || 'sistema'})`,

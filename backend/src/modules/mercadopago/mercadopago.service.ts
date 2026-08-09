@@ -174,6 +174,8 @@ export class MercadoPagoService {
     let v1 = '';
     for (const part of parts) {
       const [key, value] = part.split('=');
+      // Header malformado (segmento sem '=') não pode derrubar o handler
+      if (!value) continue;
       if (key.trim() === 'v1') v1 = value.trim();
     }
     if (!v1) {
@@ -221,9 +223,9 @@ export class MercadoPagoService {
     const { action, dataId, ts, signatureHeader, xRequestId } = data;
 
     // Política de segurança do webhook:
-    // - Secret configurado → verificação HMAC obrigatória
-    // - Sem secret em PRODUÇÃO → rejeita (evita webhook aberto)
-    // - Sem secret em DEV → aceita (testes locais com polling/manual)
+    // - Secret configurado → verificação HMAC obrigatória + frescor do ts (anti-replay)
+    // - Sem secret → rejeita em QUALQUER ambiente que não seja development
+    //   (staging/homologação expostos não podem aceitar eventos forjados)
     const isProduction = this.configService.get<string>('NODE_ENV') === 'production';
     if (this.webhookSecret) {
       const valid = this.verifyWebhookSignature({
@@ -236,10 +238,15 @@ export class MercadoPagoService {
         this.logger.warn(`Webhook MP rejeitado: assinatura inválida (evento ${action})`);
         throw new Error('Assinatura do webhook inválida');
       }
-    } else if (isProduction) {
-      this.logger.error(
-        'Webhook MP rejeitado: MERCADO_PAGO_WEBHOOK_SECRET não configurado em produção',
-      );
+
+      // Anti-replay: o `ts` do header x-signature só pode ter até 5 min
+      const tsMs = Number(ts) * 1000;
+      if (!tsMs || Math.abs(Date.now() - tsMs) > 5 * 60 * 1000) {
+        this.logger.warn(`Webhook MP rejeitado: ts fora da janela (evento ${action})`);
+        throw new Error('ts do webhook expirado');
+      }
+    } else if (isProduction || this.configService.get<string>('NODE_ENV') !== 'development') {
+      this.logger.error('Webhook MP rejeitado: MERCADO_PAGO_WEBHOOK_SECRET não configurado');
       throw new Error('Webhook não configurado');
     }
 

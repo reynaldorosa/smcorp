@@ -353,6 +353,13 @@ describe('TenantsService plataforma', () => {
     $transaction: jest.fn(),
   };
 
+  // Executa o callback da transação com um tx que espelha os mocks —
+  // o updateStatus agora roda update + auditLog atomicamente.
+  // (Definido após a declaração para evitar auto-referência na inicialização.)
+  prismaPlatform.$transaction = jest.fn((fn: (tx: unknown) => Promise<unknown>) =>
+    fn({ tenant: prismaPlatform.tenant, auditLog: prismaPlatform.auditLog }),
+  );
+
   const commPlatform = {
     send: jest.fn().mockResolvedValue({ sent: true, channel: 'email', provider: 'mock' }),
     getStatus: jest.fn(() => ({ uniqSuporteConfigured: false, channels: {} })),

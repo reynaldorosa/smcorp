@@ -169,6 +169,12 @@ export function TenantsTable({ tenants, loading, updatingId, onStatusChange }: T
                               {sub.planName || 'Sem plano'} · {brl.format(Number(sub.price))}
                             </div>
                             <div className="text-xs text-slate-500">{sub.status}</div>
+                            {sub.currentPeriodStart && sub.currentPeriodEnd && (
+                              <div className="text-xs text-slate-500">
+                                {formatDate(sub.currentPeriodStart)} →{' '}
+                                {formatDate(sub.currentPeriodEnd)}
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <span className="text-sm text-slate-500">Sem assinatura</span>

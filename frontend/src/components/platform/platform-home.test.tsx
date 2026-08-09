@@ -39,7 +39,7 @@ const tenants: PlatformTenant[] = [
     trialEndsAt: null,
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
-    subscription: { id: 'sub-1', planName: 'Plataforma', price: 0, status: 'ACTIVE', currentPeriodEnd: null, cancelAtPeriodEnd: false },
+    subscription: { id: 'sub-1', planName: 'Plataforma', price: 0, status: 'ACTIVE', currentPeriodStart: null, currentPeriodEnd: null, cancelAtPeriodEnd: false },
     _count: { users: 5, enrollments: 20 },
   },
   {

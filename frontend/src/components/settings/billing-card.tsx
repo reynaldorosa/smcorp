@@ -137,14 +137,24 @@ export function BillingCard() {
         {sub?.status === 'TRIAL' && billing.trialEndsAt && (
           <p className="flex items-center gap-2 text-sm text-gray-600">
             <CalendarClock className="h-4 w-4" />
-            Período de teste até {new Date(billing.trialEndsAt).toLocaleDateString('pt-BR')}
+            Período do plano:{' '}
+            {sub.currentPeriodStart
+              ? `${new Date(sub.currentPeriodStart).toLocaleDateString('pt-BR')} → `
+              : ''}
+            {new Date(billing.trialEndsAt).toLocaleDateString('pt-BR')}
+            <span className="text-xs text-gray-400">(teste)</span>
           </p>
         )}
 
         {sub?.status === 'ACTIVE' && sub.currentPeriodEnd && (
           <p className="flex items-center gap-2 text-sm text-gray-600">
             <CheckCircle2 className="h-4 w-4 text-green-600" />
-            Próxima cobrança em {new Date(sub.currentPeriodEnd).toLocaleDateString('pt-BR')}
+            Período:{' '}
+            {sub.currentPeriodStart
+              ? `${new Date(sub.currentPeriodStart).toLocaleDateString('pt-BR')} → `
+              : ''}
+            {new Date(sub.currentPeriodEnd).toLocaleDateString('pt-BR')} · Próxima cobrança em{' '}
+            {new Date(sub.currentPeriodEnd).toLocaleDateString('pt-BR')}
             {sub.cancelAtPeriodEnd && ' (cancelamento agendado)'}
           </p>
         )}
