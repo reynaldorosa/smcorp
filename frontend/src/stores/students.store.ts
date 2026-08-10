@@ -108,7 +108,13 @@ export interface Student {
   companyId?: string;
   personType?: 'individual' | 'company';
   // Matrículas retornadas pela API (base para derivar enrollmentId/classId)
-  enrollments?: Array<{ id: string; classId?: string; status?: string }>;
+  enrollments?: Array<{
+    id: string;
+    classId?: string;
+    status?: string;
+    documentsStatus?: string;
+    deletedAt?: string | null;
+  }>;
   
   // Valores
   totalValue: number;

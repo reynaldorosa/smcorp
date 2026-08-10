@@ -28,6 +28,7 @@ import {
   Activity,
   ChevronRight,
   ChevronLeft,
+  Link2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -63,6 +64,7 @@ import {
 } from '@/stores/crm.store';
 import { useCoursesStore } from '@/stores/courses.store';
 import { useStudentsStore, type Student } from '@/stores/students.store';
+import { EnrollmentLinkDialog } from '@/components/crm/enrollment-link-dialog';
 import { useAuthStore } from '@/stores/auth.store';
 import { studentsService } from '@/services/students.service';
 import { companiesService } from '@/services/companies.service';
@@ -197,6 +199,8 @@ export default function CRMPage() {
   const [showActivityDialog, setShowActivityDialog] = useState(false);
   const [showDealDialog, setShowDealDialog] = useState(false);
   const [selectedContact, setSelectedContact] = useState<CRMContact | null>(null);
+  // Aluno do contato para gerar o link de matrícula (QR + envio)
+  const [linkContact, setLinkContact] = useState<{ studentId: string; name: string } | null>(null);
   const [contactForm, setContactForm] = useState({ name: '', email: '', phone: '', company: '', notes: '', source: 'MANUAL' as CRMContactSource });
   const [activityForm, setActivityForm] = useState({ type: 'CALL' as CRMActivityType, title: '', description: '' });
   const [dealForm, setDealForm] = useState({ title: '', value: '', stageId: 'stage-1' });
@@ -745,6 +749,17 @@ export default function CRMPage() {
                               Converter
                             </Button>
                           )}
+                          {contact.studentId && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 text-xs text-blue-700"
+                              onClick={() => setLinkContact({ studentId: contact.studentId!, name: contact.name })}
+                            >
+                              <Link2 className="h-3 w-3 mr-1" />
+                              Link de Matrícula
+                            </Button>
+                          )}
                         </div>
                       </div>
                       {/* Mini stats */}
@@ -1153,6 +1168,16 @@ export default function CRMPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Link de matrícula do aluno convertido (QR + envio) */}
+        {linkContact && (
+          <EnrollmentLinkDialog
+            open={!!linkContact}
+            onClose={() => setLinkContact(null)}
+            studentId={linkContact.studentId}
+            studentName={linkContact.name}
+          />
+        )}
       </div>
     </div>
   );
